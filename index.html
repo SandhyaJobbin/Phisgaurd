@@ -1,0 +1,2603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PhishGuard — Email Threat Analyst Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800;900&family=Newsreader:ital,wght@0,400;0,500;1,300;1,400;1,500&family=SF+Mono&display=swap" rel="stylesheet">
+<style>
+/* ================================================================
+   PHISHGUARD · APPLE-STYLE DESIGN SYSTEM
+   Inspired by apple.com · iOS · macOS Sonoma · Apple Mail
+   ================================================================ */
+
+/* ========== RESET ========== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter Tight','SF Pro Display',-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
+  background:#fbfbfd;
+  color:#1d1d1f;
+  min-height:100vh;
+  overflow-x:hidden;
+  letter-spacing:-0.011em;
+  font-feature-settings:"ss01","cv11";
+}
+button{font-family:inherit;letter-spacing:inherit;cursor:pointer;border:none;background:none}
+input{font-family:inherit;letter-spacing:inherit}
+
+/* ========== DESIGN TOKENS ========== */
+:root{
+  /* Apple surface colors */
+  --white:#ffffff;
+  --off-white:#fbfbfd;
+  --gray-50:#f5f5f7;
+  --gray-100:#e8e8ed;
+  --gray-200:#d2d2d7;
+  --gray-300:#a1a1a6;
+  --gray-400:#86868b;
+  --gray-500:#6e6e73;
+  --gray-800:#424245;
+  --black:#1d1d1f;
+  --true-black:#000;
+
+  /* Apple system colors */
+  --blue:#0071e3;
+  --blue-dark:#0077ed;
+  --blue-light:#2997ff;
+  --blue-tint:rgba(0,113,227,.08);
+
+  --red:#ff3b30;
+  --red-tint:rgba(255,59,48,.08);
+
+  --green:#30d158;
+  --green-light:#34c759;
+  --green-tint:rgba(48,209,88,.1);
+
+  --orange:#ff9500;
+  --orange-tint:rgba(255,149,0,.1);
+
+  --yellow:#ffd60a;
+
+  --purple:#bf5af2;
+  --purple-tint:rgba(191,90,242,.08);
+
+  --pink:#ff2d55;
+  --teal:#5ac8fa;
+  --mint:#00c7be;
+  --indigo:#5e5ce6;
+  --brown:#ac8e68;
+
+  /* Typography */
+  --sans:'Inter Tight','SF Pro Display',-apple-system,BlinkMacSystemFont,sans-serif;
+  --serif:'Newsreader',Georgia,serif;
+  --mono:'SF Mono','Roboto Mono',Menlo,monospace;
+
+  /* Apple easing */
+  --ease:cubic-bezier(0.28, 0.16, 0.22, 1);
+  --ease-out:cubic-bezier(0.16, 1, 0.3, 1);
+  --spring:cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Shadows */
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04), 0 0 0 1px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04);
+  --shadow-lg:0 20px 60px rgba(0,0,0,.08), 0 6px 20px rgba(0,0,0,.04);
+  --shadow-xl:0 32px 80px rgba(0,0,0,.12), 0 12px 30px rgba(0,0,0,.06);
+}
+
+/* ========== SELECTION ========== */
+::selection{background:rgba(0,113,227,.18);color:var(--black)}
+
+/* ========== SCROLLBAR ========== */
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:var(--gray-200);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--gray-300)}
+
+/* ========== APPLE NAV BAR ========== */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;height:48px;
+  background:rgba(251,251,253,.72);
+  backdrop-filter:saturate(180%) blur(20px);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:1px solid rgba(0,0,0,.06);
+  display:flex;align-items:center;padding:0 22px;gap:28px;
+  font-size:12px;font-weight:400;
+}
+.nav .logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:13px;letter-spacing:-.01em}
+.nav .logo .mark{
+  width:20px;height:20px;position:relative;
+  display:flex;align-items:center;justify-content:center;
+}
+.nav .logo .mark svg{width:100%;height:100%}
+.nav ul{display:flex;gap:28px;list-style:none;margin:0;padding:0}
+.nav ul li{color:var(--gray-800);cursor:pointer;transition:opacity .2s}
+.nav ul li:hover{opacity:.7}
+.nav .session-info{margin-left:auto;display:flex;align-items:center;gap:20px;font-family:var(--mono);font-size:10.5px;color:var(--gray-400);letter-spacing:0}
+.nav .session-info .dot{width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;margin-right:6px;box-shadow:0 0 8px var(--green);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* ========== LAYOUT ========== */
+.app{padding-top:48px;min-height:100vh}
+.view{display:none;animation:viewIn .7s var(--ease-out)}
+.view.active{display:block}
+@keyframes viewIn{
+  from{opacity:0;transform:translateY(12px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* ========== LOGIN VIEW ========== */
+.login-view{min-height:calc(100vh - 48px);display:flex;flex-direction:column}
+
+.hero{
+  padding:88px 22px 60px;text-align:center;position:relative;
+  background:radial-gradient(ellipse 900px 400px at 50% 0%, rgba(0,113,227,.06), transparent 70%);
+}
+.hero .eyebrow{
+  font-size:17px;font-weight:500;color:var(--blue);margin-bottom:12px;
+  animation:fadeUp .8s var(--ease-out) 0.1s both;
+}
+.hero h1{
+  font-family:var(--sans);
+  font-size:clamp(48px,7.5vw,96px);
+  font-weight:700;
+  line-height:1.02;
+  letter-spacing:-0.045em;
+  color:var(--black);
+  animation:fadeUp .9s var(--ease-out) 0.2s both;
+  max-width:980px;margin:0 auto;
+}
+.hero h1 .accent{
+  background:linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  font-style:italic;font-family:var(--serif);font-weight:400;letter-spacing:-.02em;
+}
+.hero .lede{
+  font-size:22px;font-weight:400;line-height:1.36;color:var(--gray-500);
+  max-width:640px;margin:22px auto 0;letter-spacing:-.015em;
+  animation:fadeUp .9s var(--ease-out) 0.35s both;
+}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* feature pills floating in hero */
+.hero-pills{
+  display:flex;gap:10px;justify-content:center;margin-top:32px;flex-wrap:wrap;
+  animation:fadeUp 1s var(--ease-out) 0.5s both;
+}
+.hero-pill{
+  padding:8px 16px;border-radius:100px;background:var(--white);
+  box-shadow:var(--shadow-sm);font-size:13px;font-weight:500;color:var(--gray-800);
+  display:inline-flex;align-items:center;gap:8px;
+}
+.hero-pill .pdot{width:7px;height:7px;border-radius:50%;background:var(--blue)}
+.hero-pill:nth-child(2) .pdot{background:var(--green)}
+.hero-pill:nth-child(3) .pdot{background:var(--purple)}
+.hero-pill:nth-child(4) .pdot{background:var(--orange)}
+
+/* login card */
+.login-card-wrap{padding:40px 22px 80px;display:flex;justify-content:center}
+.login-card{
+  width:100%;max-width:460px;background:var(--white);
+  border-radius:22px;padding:44px 40px;box-shadow:var(--shadow-lg);
+  animation:cardIn 1s var(--ease-out) 0.6s both;
+  position:relative;overflow:hidden;
+}
+@keyframes cardIn{
+  from{opacity:0;transform:translateY(30px) scale(0.98)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+.login-card h2{
+  font-size:28px;font-weight:600;letter-spacing:-.025em;margin-bottom:6px;
+}
+.login-card .sub{font-size:15px;color:var(--gray-500);margin-bottom:28px;line-height:1.45}
+
+.role-badge{
+  display:inline-flex;align-items:center;gap:8px;padding:6px 12px;
+  background:var(--blue-tint);color:var(--blue);border-radius:100px;
+  font-size:12px;font-weight:500;margin-bottom:18px;
+}
+.role-badge svg{width:13px;height:13px}
+
+.field{margin-bottom:16px;position:relative}
+.field label{
+  position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  font-size:15px;color:var(--gray-400);pointer-events:none;
+  transition:all .3s var(--ease);background:var(--white);padding:0 4px;
+}
+.field.filled label,.field input:focus ~ label{
+  top:0;font-size:11px;color:var(--blue);font-weight:500;
+}
+.field input{
+  width:100%;padding:18px 16px 14px;background:var(--white);
+  border:1px solid var(--gray-200);color:var(--black);font-size:15px;
+  border-radius:12px;outline:none;transition:all .25s var(--ease);
+}
+.field input:focus{border-color:var(--blue);box-shadow:0 0 0 4px var(--blue-tint)}
+.field.error input{border-color:var(--red);box-shadow:0 0 0 4px var(--red-tint)}
+.field .err{color:var(--red);font-size:12px;margin-top:6px;margin-left:4px;display:none}
+.field.error .err{display:block}
+
+.btn-primary{
+  width:100%;padding:14px 24px;margin-top:14px;
+  background:var(--blue);color:white;border:none;
+  font-size:15px;font-weight:500;letter-spacing:-.01em;
+  border-radius:12px;cursor:pointer;transition:all .2s var(--ease);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  position:relative;overflow:hidden;
+}
+.btn-primary::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.15),transparent);
+  opacity:0;transition:opacity .2s;
+}
+.btn-primary:hover{background:var(--blue-dark);transform:scale(1.01)}
+.btn-primary:hover::before{opacity:1}
+.btn-primary:active{transform:scale(0.98)}
+.btn-primary .arrow{transition:transform .3s var(--spring)}
+.btn-primary:hover .arrow{transform:translateX(4px)}
+
+.login-foot{
+  margin-top:20px;padding-top:18px;border-top:1px solid var(--gray-100);
+  font-size:12px;color:var(--gray-400);line-height:1.55;text-align:center;
+}
+.login-foot b{color:var(--gray-800);font-weight:500}
+
+/* features strip below card */
+.features-strip{
+  padding:0 22px 80px;max-width:1100px;margin:0 auto;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+}
+@media(max-width:800px){.features-strip{grid-template-columns:1fr}}
+.feature-card{
+  padding:32px 28px;background:var(--white);border-radius:22px;
+  box-shadow:var(--shadow-sm);transition:all .3s var(--ease);
+}
+.feature-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+.feature-card .icon{
+  width:44px;height:44px;border-radius:10px;
+  background:var(--blue-tint);color:var(--blue);
+  display:flex;align-items:center;justify-content:center;margin-bottom:16px;
+}
+.feature-card:nth-child(2) .icon{background:var(--green-tint);color:var(--green)}
+.feature-card:nth-child(3) .icon{background:var(--purple-tint);color:var(--purple)}
+.feature-card .icon svg{width:22px;height:22px}
+.feature-card h3{font-size:17px;font-weight:600;letter-spacing:-.015em;margin-bottom:6px}
+.feature-card p{font-size:14px;color:var(--gray-500);line-height:1.5}
+
+/* ========== CONSOLE VIEW ========== */
+.console-wrap{max-width:1120px;margin:0 auto;padding:48px 22px 80px}
+.console-hero{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  margin-bottom:40px;flex-wrap:wrap;gap:24px;
+}
+.console-hero h2{
+  font-size:clamp(38px,5vw,56px);font-weight:700;letter-spacing:-.035em;
+  line-height:1.02;
+}
+.console-hero h2 .em{
+  font-family:var(--serif);font-style:italic;font-weight:400;
+  background:linear-gradient(135deg, var(--blue), var(--purple));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.console-hero p{color:var(--gray-500);margin-top:10px;font-size:17px;max-width:540px;line-height:1.4}
+
+.user-pill{
+  padding:10px 14px 10px 10px;background:var(--white);border-radius:100px;
+  display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-sm);
+}
+.user-pill .avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:600;color:white;font-size:13px;
+}
+.user-pill .who .name{font-size:14px;font-weight:500;letter-spacing:-.01em}
+.user-pill .who .role{font-size:11px;color:var(--gray-400);font-weight:400}
+
+/* stats */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:48px}
+@media(max-width:800px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+.stat-card{
+  padding:24px;background:var(--white);border-radius:18px;
+  box-shadow:var(--shadow-sm);position:relative;overflow:hidden;
+  transition:transform .3s var(--ease);
+}
+.stat-card:hover{transform:translateY(-2px)}
+.stat-card .label{
+  font-size:13px;color:var(--gray-400);font-weight:500;
+  display:flex;align-items:center;gap:6px;margin-bottom:12px;
+}
+.stat-card .label svg{width:14px;height:14px}
+.stat-card .val{
+  font-size:36px;font-weight:600;letter-spacing:-.03em;line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.stat-card .sub{font-size:13px;color:var(--gray-400);margin-top:6px;font-weight:400}
+.stat-card.blue .val{color:var(--blue)}
+.stat-card.green .val{color:var(--green)}
+.stat-card.purple .val{color:var(--purple)}
+.stat-card.orange .val{color:var(--orange)}
+
+/* section header */
+.section-h{
+  display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px;
+}
+.section-h h3{font-size:24px;font-weight:600;letter-spacing:-.025em}
+.section-h .hint{font-size:13px;color:var(--gray-400)}
+
+/* levels */
+.levels-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:900px){.levels-grid{grid-template-columns:1fr}}
+.level-card{
+  background:var(--white);border-radius:22px;padding:32px;
+  position:relative;overflow:hidden;cursor:pointer;
+  transition:all .4s var(--ease-out);min-height:340px;
+  display:flex;flex-direction:column;box-shadow:var(--shadow-sm);
+}
+.level-card:not(.locked):hover{
+  transform:translateY(-6px);box-shadow:var(--shadow-lg);
+}
+.level-card.locked{opacity:.55;cursor:not-allowed}
+.level-card.completed{background:linear-gradient(165deg,#fff,#f6fffa)}
+.level-card.completed::after{
+  content:'';position:absolute;top:0;right:0;width:140px;height:140px;
+  background:radial-gradient(circle,rgba(48,209,88,.1),transparent 70%);
+  pointer-events:none;
+}
+
+.level-num-wrap{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;
+}
+.level-num{
+  width:56px;height:56px;border-radius:16px;
+  background:var(--blue-tint);color:var(--blue);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:600;letter-spacing:-.02em;
+}
+.level-card.tier-2 .level-num{background:var(--purple-tint);color:var(--purple)}
+.level-card.tier-3 .level-num{background:var(--orange-tint);color:var(--orange)}
+.level-card.completed .level-num{background:var(--green-tint);color:var(--green)}
+
+.level-status{
+  font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  padding:4px 10px;border-radius:100px;background:var(--gray-50);color:var(--gray-500);
+}
+.level-card.completed .level-status{background:var(--green-tint);color:var(--green)}
+.level-card:not(.locked):not(.completed) .level-status{background:var(--blue-tint);color:var(--blue)}
+
+.level-card h4{font-size:24px;font-weight:600;letter-spacing:-.025em;margin-bottom:8px}
+.level-card .level-desc{font-size:15px;color:var(--gray-500);line-height:1.4;flex:1;margin-bottom:20px}
+
+.level-meta{
+  display:flex;gap:20px;padding-top:18px;border-top:1px solid var(--gray-100);
+}
+.level-meta div{flex:1}
+.level-meta .mval{font-size:18px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.level-meta .mlbl{font-size:11px;color:var(--gray-400);margin-top:2px;font-weight:500}
+
+.level-card .cta{
+  position:absolute;bottom:28px;right:28px;
+  width:40px;height:40px;border-radius:50%;background:var(--blue);
+  display:flex;align-items:center;justify-content:center;color:white;
+  transition:all .3s var(--spring);
+}
+.level-card.tier-2 .cta{background:var(--purple)}
+.level-card.tier-3 .cta{background:var(--orange)}
+.level-card.completed .cta{background:var(--green)}
+.level-card:hover .cta{transform:translate(4px,-4px) scale(1.1)}
+.level-card.locked .cta{background:var(--gray-200);color:var(--gray-400)}
+
+.level-card .lock-badge{
+  position:absolute;top:20px;right:20px;width:32px;height:32px;
+  background:var(--gray-50);border-radius:50%;
+  display:none;align-items:center;justify-content:center;color:var(--gray-400);
+}
+.level-card.locked .lock-badge{display:flex}
+.level-card.locked .level-status{display:none}
+
+/* ========== GAME VIEW ========== */
+.game-wrap{max-width:1040px;margin:0 auto;padding:32px 22px 80px}
+
+.game-top{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;
+  flex-wrap:wrap;gap:16px;
+}
+.back-btn{
+  display:inline-flex;align-items:center;gap:6px;padding:8px 14px 8px 10px;
+  background:var(--white);border-radius:100px;color:var(--blue);
+  font-size:14px;font-weight:500;box-shadow:var(--shadow-sm);
+  transition:all .2s var(--ease);
+}
+.back-btn:hover{transform:translateX(-2px);background:var(--gray-50)}
+.back-btn svg{width:16px;height:16px}
+
+.game-lvl-title{display:flex;align-items:center;gap:12px}
+.game-lvl-title .badge{
+  padding:4px 10px;background:var(--blue-tint);color:var(--blue);border-radius:100px;
+  font-size:12px;font-weight:600;letter-spacing:.02em;
+}
+.game-lvl-title h2{font-size:22px;font-weight:600;letter-spacing:-.02em}
+
+.game-pills{display:flex;gap:8px;align-items:center}
+.game-pill{
+  padding:8px 14px;background:var(--white);border-radius:100px;box-shadow:var(--shadow-sm);
+  font-size:12px;color:var(--gray-500);display:flex;align-items:center;gap:6px;
+}
+.game-pill b{color:var(--black);font-weight:600;font-size:14px;font-variant-numeric:tabular-nums}
+.game-pill.score b{color:var(--blue)}
+.game-pill.streak b{color:var(--orange)}
+
+/* Dynamic-Island-style timer + progress */
+.island{
+  background:var(--black);color:white;border-radius:26px;
+  padding:14px 24px;margin-bottom:20px;
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  box-shadow:0 10px 40px rgba(0,0,0,.2);
+  position:relative;overflow:hidden;
+  animation:islandIn .6s var(--spring);
+}
+@keyframes islandIn{
+  from{transform:scale(.9) translateY(-10px);opacity:0}
+  to{transform:scale(1) translateY(0);opacity:1}
+}
+.island .qcount{
+  font-size:13px;letter-spacing:-.01em;font-weight:500;color:rgba(255,255,255,.7);
+}
+.island .qcount b{color:white;font-weight:600;font-variant-numeric:tabular-nums;font-size:15px;margin-right:2px}
+.island .timer-box{
+  display:flex;align-items:center;gap:10px;
+  font-family:var(--mono);font-size:15px;font-weight:600;color:white;
+  font-variant-numeric:tabular-nums;
+}
+.timer-ring{position:relative;width:24px;height:24px}
+.timer-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.timer-ring circle{fill:none;stroke-width:2.5;stroke-linecap:round}
+.timer-ring .bg{stroke:rgba(255,255,255,.2)}
+.timer-ring .fg{stroke:var(--green);transition:stroke-dashoffset .5s linear,stroke .3s}
+.timer-ring.warn .fg{stroke:var(--orange)}
+.timer-ring.danger .fg{stroke:var(--red)}
+
+/* question bar */
+.qprogress{display:flex;gap:4px;margin-bottom:20px}
+.qprogress .seg{
+  flex:1;height:4px;background:var(--gray-100);border-radius:2px;overflow:hidden;
+  transition:all .3s;position:relative;
+}
+.qprogress .seg.current{background:var(--blue-tint)}
+.qprogress .seg.current::after{
+  content:'';position:absolute;inset:0;background:var(--blue);
+  animation:segProgress 1.5s ease-in-out infinite;transform-origin:left;
+}
+@keyframes segProgress{
+  0%{transform:scaleX(0);opacity:0.5}
+  50%{transform:scaleX(1);opacity:1}
+  100%{transform:scaleX(0);opacity:0.5;transform-origin:right}
+}
+.qprogress .seg.correct{background:var(--green)}
+.qprogress .seg.wrong{background:var(--red)}
+
+/* ===== Apple Mail-style email card ===== */
+.mail-card{
+  background:var(--white);border-radius:18px;overflow:hidden;
+  box-shadow:var(--shadow-sm);margin-bottom:20px;
+  animation:mailSlideIn .5s var(--ease-out);
+}
+@keyframes mailSlideIn{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.mail-subject-row{
+  padding:20px 24px 16px;border-bottom:1px solid var(--gray-100);
+  display:flex;align-items:flex-start;justify-content:space-between;gap:20px;
+}
+.mail-subject{
+  font-size:19px;font-weight:600;letter-spacing:-.02em;line-height:1.3;flex:1;
+}
+.mail-flags{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.mail-flag{
+  width:28px;height:28px;border-radius:50%;background:var(--gray-50);
+  display:flex;align-items:center;justify-content:center;color:var(--gray-400);
+}
+.mail-flag svg{width:14px;height:14px}
+.mail-flag.warn{background:var(--orange-tint);color:var(--orange)}
+.mail-flag.bad{background:var(--red-tint);color:var(--red)}
+
+/* sender row */
+.mail-sender{
+  padding:16px 24px;display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid var(--gray-100);
+}
+.sender-avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--teal),var(--blue));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:600;color:white;font-size:13px;flex-shrink:0;
+}
+.sender-info{flex:1;min-width:0}
+.sender-info .name{font-size:14px;font-weight:500;letter-spacing:-.01em}
+.sender-info .email{font-size:12px;color:var(--gray-400);font-family:var(--mono)}
+.sender-time{font-size:11px;color:var(--gray-400);font-family:var(--mono);flex-shrink:0}
+
+/* details disclosure */
+.mail-details{border-bottom:1px solid var(--gray-100)}
+.mail-details-head{
+  padding:12px 24px;display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;user-select:none;transition:background .15s;
+}
+.mail-details-head:hover{background:var(--gray-50)}
+.mail-details-head .l{
+  font-size:13px;color:var(--blue);font-weight:500;display:flex;align-items:center;gap:6px;
+}
+.mail-details-head .chev{
+  width:14px;height:14px;color:var(--blue);transition:transform .3s var(--ease);
+}
+.mail-details.open .chev{transform:rotate(90deg)}
+.mail-details-body{max-height:0;overflow:hidden;transition:max-height .4s var(--ease-out)}
+.mail-details.open .mail-details-body{max-height:500px}
+.mail-details-body-inner{
+  padding:6px 24px 18px;display:grid;grid-template-columns:100px 1fr;gap:8px 16px;
+  font-family:var(--mono);font-size:12px;
+}
+.mail-details-body-inner .k{color:var(--gray-400);text-transform:lowercase;letter-spacing:0;font-size:11px;align-self:center}
+.mail-details-body-inner .v{color:var(--black);word-break:break-all}
+.mail-details-body-inner .v.flag{color:var(--orange)}
+.mail-details-body-inner .v.fail{color:var(--red);font-weight:500}
+.mail-details-body-inner .v.pass{color:var(--green);font-weight:500}
+
+.auth-pills{display:flex;gap:6px;margin-top:2px;flex-wrap:wrap}
+.auth-pill{
+  padding:3px 9px;border-radius:100px;font-size:10px;font-weight:600;
+  letter-spacing:.02em;font-family:var(--sans);
+}
+.auth-pill.pass{background:var(--green-tint);color:var(--green)}
+.auth-pill.fail{background:var(--red-tint);color:var(--red)}
+.auth-pill.none{background:var(--gray-50);color:var(--gray-400)}
+
+/* body */
+.mail-body{padding:24px 28px;font-size:15px;line-height:1.55;color:var(--black);white-space:pre-wrap;max-height:360px;overflow-y:auto;letter-spacing:-.005em}
+
+/* ===== Classification (iOS segmented control style) ===== */
+.classify-block{margin-bottom:20px}
+.classify-label{
+  font-size:13px;font-weight:600;color:var(--black);margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;letter-spacing:-.01em;
+}
+.classify-label .step{
+  width:20px;height:20px;border-radius:50%;background:var(--blue);color:white;
+  font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;
+}
+.classify-label .hint{color:var(--gray-400);font-weight:400;font-size:13px;margin-left:auto}
+
+.threat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:700px){.threat-grid{grid-template-columns:repeat(2,1fr)}}
+.threat-grid.l2{grid-template-columns:repeat(4,1fr)}
+@media(max-width:900px){.threat-grid.l2{grid-template-columns:repeat(2,1fr)}}
+
+.threat-chip{
+  padding:14px 16px;background:var(--white);border-radius:14px;
+  box-shadow:var(--shadow-sm);text-align:left;cursor:pointer;
+  transition:all .25s var(--ease);position:relative;overflow:hidden;
+  font-size:14px;font-weight:500;color:var(--black);letter-spacing:-.01em;
+  display:flex;align-items:center;gap:10px;min-height:58px;
+}
+.threat-chip .dot{
+  width:10px;height:10px;border-radius:50%;background:var(--color,var(--gray-300));
+  flex-shrink:0;transition:transform .25s var(--spring);
+}
+.threat-chip:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.threat-chip:hover .dot{transform:scale(1.4)}
+.threat-chip.selected{
+  background:var(--color-bg,var(--blue-tint));
+  box-shadow:0 0 0 2px var(--color,var(--blue)),var(--shadow-md);
+  color:var(--color-text,var(--blue));
+}
+.threat-chip.selected .dot{transform:scale(1.4);box-shadow:0 0 10px var(--color,var(--blue))}
+.threat-chip .tname{flex:1;font-weight:500}
+.threat-chip.selected .tname{font-weight:600}
+
+.threat-chip[data-v="Legitimate"]{--color:var(--green);--color-bg:var(--green-tint);--color-text:var(--green)}
+.threat-chip[data-v="Phishing & Spoofing"]{--color:var(--red);--color-bg:var(--red-tint);--color-text:var(--red)}
+.threat-chip[data-v="Spam & Junk"]{--color:var(--orange);--color-bg:var(--orange-tint);--color-text:var(--orange)}
+.threat-chip[data-v="Malicious Content"]{--color:var(--pink);--color-bg:rgba(255,45,85,.08);--color-text:var(--pink)}
+.threat-chip[data-v="Abuse & Harassment"]{--color:var(--purple);--color-bg:var(--purple-tint);--color-text:var(--purple)}
+.threat-chip[data-v="High-Risk Fraud"]{--color:var(--indigo);--color-bg:rgba(94,92,230,.08);--color-text:var(--indigo)}
+.threat-chip[data-l2]{--color:var(--blue);--color-bg:var(--blue-tint);--color-text:var(--blue)}
+
+.submit-row{display:flex;justify-content:space-between;gap:12px;margin-top:24px;align-items:center}
+.submit-hint{font-size:13px;color:var(--gray-400)}
+.submit-actions{display:flex;gap:10px}
+.btn-secondary{
+  padding:12px 20px;border-radius:100px;background:var(--gray-50);color:var(--gray-800);
+  font-size:14px;font-weight:500;transition:all .2s var(--ease);
+}
+.btn-secondary:hover{background:var(--gray-100)}
+.btn-submit{
+  padding:12px 24px;border-radius:100px;background:var(--blue);color:white;
+  font-size:14px;font-weight:500;display:flex;align-items:center;gap:6px;
+  transition:all .2s var(--ease);letter-spacing:-.01em;
+}
+.btn-submit:hover:not(:disabled){background:var(--blue-dark);transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,113,227,.3)}
+.btn-submit:disabled{background:var(--gray-100);color:var(--gray-300);cursor:not-allowed}
+
+/* ========== FEEDBACK SHEET (iOS-style) ========== */
+.sheet-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.4);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  display:none;align-items:flex-end;justify-content:center;z-index:500;
+  animation:overlayIn .3s ease;
+}
+.sheet-overlay.show{display:flex}
+@keyframes overlayIn{from{opacity:0}to{opacity:1}}
+
+@media(min-width:700px){.sheet-overlay{align-items:center}}
+
+.sheet{
+  background:var(--white);border-radius:22px 22px 0 0;
+  max-width:560px;width:100%;max-height:92vh;overflow:auto;
+  animation:sheetUp .5s var(--ease-out);
+}
+@media(min-width:700px){
+  .sheet{border-radius:22px;margin:20px}
+  @keyframes sheetUp{
+    from{opacity:0;transform:translateY(30px) scale(.95)}
+    to{opacity:1;transform:translateY(0) scale(1)}
+  }
+}
+@media(max-width:700px){
+  @keyframes sheetUp{
+    from{transform:translateY(100%)}
+    to{transform:translateY(0)}
+  }
+}
+
+.sheet-handle{
+  width:36px;height:5px;background:var(--gray-200);border-radius:3px;
+  margin:10px auto;display:block;
+}
+@media(min-width:700px){.sheet-handle{display:none}}
+
+.sheet-hdr{
+  padding:20px 28px 20px;text-align:center;border-bottom:1px solid var(--gray-100);
+}
+.sheet-icon{
+  width:68px;height:68px;border-radius:50%;margin:0 auto 14px;
+  display:flex;align-items:center;justify-content:center;
+  animation:iconPop .6s var(--spring);position:relative;
+}
+@keyframes iconPop{
+  0%{transform:scale(0);opacity:0}
+  100%{transform:scale(1);opacity:1}
+}
+.sheet.correct .sheet-icon{background:var(--green-tint);color:var(--green)}
+.sheet.wrong .sheet-icon{background:var(--red-tint);color:var(--red)}
+.sheet-icon svg{width:32px;height:32px}
+.sheet.correct .sheet-icon::before{
+  content:'';position:absolute;inset:-8px;border-radius:50%;border:2px solid var(--green);
+  opacity:0;animation:haloRing 1.8s ease-out infinite;
+}
+@keyframes haloRing{
+  0%{transform:scale(.9);opacity:.6}
+  100%{transform:scale(1.4);opacity:0}
+}
+
+.sheet-hdr h3{font-size:24px;font-weight:600;letter-spacing:-.025em;margin-bottom:4px}
+.sheet.correct h3{color:var(--green)}
+.sheet.wrong h3{color:var(--red)}
+.sheet-hdr .s{font-size:14px;color:var(--gray-400);font-weight:400}
+
+.sheet-body{padding:20px 28px 24px}
+
+/* points display */
+.points-display{
+  padding:18px 20px;background:var(--gray-50);border-radius:14px;
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;
+}
+.points-display .pl{font-size:13px;color:var(--gray-500);font-weight:500}
+.points-display .pv{
+  font-size:30px;font-weight:700;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;color:var(--black);
+}
+.sheet.correct .points-display{background:var(--green-tint)}
+.sheet.correct .points-display .pv{color:var(--green)}
+.sheet.wrong .points-display{background:var(--red-tint)}
+.sheet.wrong .points-display .pv{color:var(--red)}
+.points-display .pv .plus{font-size:18px;vertical-align:top;margin-right:2px;font-weight:600}
+
+/* answer rows */
+.ans-block{margin-bottom:16px}
+.ans-row{
+  padding:14px 16px;border-radius:12px;margin-bottom:6px;
+  display:flex;justify-content:space-between;align-items:center;
+  background:var(--gray-50);transition:all .3s;
+}
+.ans-row .al{font-size:12px;color:var(--gray-500);font-weight:500}
+.ans-row .av{font-size:14px;font-weight:500;letter-spacing:-.01em}
+.ans-row.correct-ans{background:var(--green-tint)}
+.ans-row.correct-ans .av{color:var(--green)}
+.ans-row.wrong-ans{background:var(--red-tint)}
+.ans-row.wrong-ans .av{color:var(--red)}
+.ans-row.good-ans{background:var(--green-tint)}
+.ans-row.good-ans .av{color:var(--green)}
+
+/* explanation */
+.explain-box{
+  padding:16px 18px;background:var(--gray-50);border-radius:12px;
+  font-size:14px;line-height:1.5;color:var(--gray-800);
+}
+.explain-box b{color:var(--black);font-weight:600}
+.explain-box .tag-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.explain-box .tag{
+  padding:4px 10px;border-radius:100px;font-size:11px;font-weight:600;
+  background:var(--white);color:var(--gray-800);
+}
+.explain-box .tag.risk{background:var(--red-tint);color:var(--red)}
+.explain-box .tag.safe{background:var(--green-tint);color:var(--green)}
+.explain-box .tag.warn{background:var(--orange-tint);color:var(--orange)}
+.explain-box .tag.neutral{background:var(--blue-tint);color:var(--blue)}
+
+.sheet-foot{
+  padding:14px 20px;border-top:1px solid var(--gray-100);
+  display:flex;justify-content:flex-end;
+}
+.btn-next-q{
+  padding:12px 24px;background:var(--black);color:white;border-radius:100px;
+  font-size:14px;font-weight:500;display:flex;align-items:center;gap:6px;
+  transition:all .2s var(--ease);
+}
+.btn-next-q:hover{background:var(--true-black);transform:translateY(-1px)}
+
+/* ========== LEVEL COMPLETE ========== */
+.complete-wrap{max-width:960px;margin:0 auto;padding:48px 22px 80px}
+
+.badge-reveal{
+  text-align:center;padding:60px 32px;background:var(--white);
+  border-radius:28px;box-shadow:var(--shadow-md);margin-bottom:32px;
+  position:relative;overflow:hidden;
+}
+.badge-reveal::before{
+  content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);
+  width:500px;height:300px;
+  background:radial-gradient(ellipse,rgba(48,209,88,.15),transparent 60%);
+  pointer-events:none;
+}
+
+.badge-tag{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 14px;
+  background:var(--green-tint);color:var(--green);border-radius:100px;
+  font-size:12px;font-weight:600;letter-spacing:.02em;margin-bottom:24px;
+  position:relative;animation:fadeUp .5s var(--ease-out);
+}
+.badge-tag .sparkle{animation:sparkle 2s ease-in-out infinite}
+@keyframes sparkle{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.2)}}
+
+/* Activity-ring inspired badge */
+.badge-rings{
+  width:180px;height:180px;margin:0 auto 28px;position:relative;
+  animation:badgeReveal 1s var(--spring);
+}
+@keyframes badgeReveal{
+  0%{transform:scale(0) rotate(-45deg);opacity:0}
+  60%{transform:scale(1.08) rotate(8deg);opacity:1}
+  100%{transform:scale(1) rotate(0);opacity:1}
+}
+.badge-rings svg{width:100%;height:100%;transform:rotate(-90deg)}
+.badge-rings .ring{fill:none;stroke-width:14;stroke-linecap:round}
+.badge-rings .ring.bg{stroke:var(--gray-100)}
+.badge-rings .ring.r1{stroke:var(--green);filter:drop-shadow(0 0 8px rgba(48,209,88,.4))}
+.badge-rings .ring.r2{stroke:var(--blue);filter:drop-shadow(0 0 8px rgba(0,113,227,.4))}
+.badge-rings .ring.r3{stroke:var(--orange);filter:drop-shadow(0 0 8px rgba(255,149,0,.4))}
+.badge-rings .emoji{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:52px;animation:emojiPop 1s var(--spring) .4s both;
+}
+@keyframes emojiPop{
+  0%{transform:scale(0)}
+  100%{transform:scale(1)}
+}
+
+.badge-reveal h2{
+  font-size:48px;font-weight:700;letter-spacing:-.035em;line-height:1.05;
+  animation:fadeUp .6s var(--ease-out) .3s both;
+}
+.badge-reveal h2 .bname{
+  font-family:var(--serif);font-style:italic;font-weight:400;
+  background:linear-gradient(135deg,var(--green),var(--blue));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.badge-reveal .bdesc{
+  font-size:18px;color:var(--gray-500);margin-top:14px;line-height:1.4;
+  max-width:500px;margin-left:auto;margin-right:auto;
+  animation:fadeUp .6s var(--ease-out) .45s both;
+}
+
+.confetti{position:absolute;width:10px;height:10px;top:30%;border-radius:2px;opacity:0;animation:confettiFall 2.2s ease-out forwards}
+@keyframes confettiFall{
+  0%{opacity:1;transform:translate(0,0) rotate(0)}
+  100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(var(--r))}
+}
+
+/* results */
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px}
+@media(max-width:800px){.results-grid{grid-template-columns:1fr}}
+.result-panel{padding:28px;background:var(--white);border-radius:22px;box-shadow:var(--shadow-sm)}
+.result-panel h3{
+  font-size:13px;font-weight:600;color:var(--gray-500);margin-bottom:20px;
+  letter-spacing:-.01em;text-transform:uppercase;letter-spacing:.04em;
+}
+
+/* Apple Watch Activity Rings */
+.activity-rings{
+  width:200px;height:200px;margin:0 auto 18px;position:relative;
+  animation:ringsReveal 1s var(--spring);
+}
+@keyframes ringsReveal{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.activity-rings svg{width:100%;height:100%;transform:rotate(-90deg)}
+.activity-rings circle{fill:none;stroke-linecap:round;transition:stroke-dashoffset 1.5s var(--ease-out)}
+.activity-rings .bg{stroke-opacity:.18}
+.activity-rings .move-bg{stroke:var(--red)}
+.activity-rings .move{stroke:var(--red);filter:drop-shadow(0 0 6px rgba(255,59,48,.4))}
+.activity-rings .exer-bg{stroke:var(--green)}
+.activity-rings .exer{stroke:var(--green);filter:drop-shadow(0 0 6px rgba(48,209,88,.4))}
+.activity-rings .stand-bg{stroke:var(--blue)}
+.activity-rings .stand{stroke:var(--blue);filter:drop-shadow(0 0 6px rgba(0,113,227,.4))}
+.activity-rings .center-txt{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.activity-rings .pct{font-size:42px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.activity-rings .pct-lbl{font-size:11px;color:var(--gray-400);font-weight:500;letter-spacing:.04em;text-transform:uppercase}
+
+.score-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.score-mini .box{padding:14px;background:var(--gray-50);border-radius:12px;text-align:center}
+.score-mini b{font-size:22px;font-weight:600;letter-spacing:-.02em;display:block;font-variant-numeric:tabular-nums}
+.score-mini .lbl{font-size:11px;color:var(--gray-500);margin-top:2px;font-weight:500}
+.score-mini .correct b{color:var(--green)}
+.score-mini .missed b{color:var(--red)}
+.score-mini .pts b{color:var(--blue)}
+
+/* breakdown */
+.breakdown-row{margin-bottom:16px}
+.breakdown-row:last-child{margin-bottom:0}
+.breakdown-row .rt{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.breakdown-row .rt .rn{font-size:13px;font-weight:500;letter-spacing:-.01em;color:var(--black)}
+.breakdown-row .rt .rnums{font-size:12px;color:var(--gray-500);font-variant-numeric:tabular-nums;font-family:var(--mono)}
+.breakdown-row .rt .rnums b{color:var(--black);font-weight:600}
+.pbar{height:8px;background:var(--gray-100);border-radius:4px;overflow:hidden;position:relative}
+.pbar .pfill{
+  height:100%;background:var(--color,var(--blue));border-radius:4px;
+  transition:width 1.5s var(--ease-out);position:relative;overflow:hidden;
+}
+.pbar .pfill::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);
+  animation:shimmer 2s infinite;
+}
+@keyframes shimmer{
+  0%{transform:translateX(-100%)}
+  100%{transform:translateX(100%)}
+}
+
+.complete-actions{display:flex;gap:12px;justify-content:center}
+
+/* ========== FINAL VIEW / LEADERBOARD ========== */
+.final-wrap{max-width:1040px;margin:0 auto;padding:48px 22px 80px}
+
+.final-hero{
+  text-align:center;padding:64px 32px;background:var(--white);
+  border-radius:28px;box-shadow:var(--shadow-md);margin-bottom:24px;
+  position:relative;overflow:hidden;
+}
+.final-hero::before{
+  content:'';position:absolute;top:-150px;left:-150px;width:400px;height:400px;
+  background:radial-gradient(circle,rgba(0,113,227,.08),transparent 70%);pointer-events:none;
+}
+.final-hero::after{
+  content:'';position:absolute;bottom:-150px;right:-150px;width:400px;height:400px;
+  background:radial-gradient(circle,rgba(191,90,242,.08),transparent 70%);pointer-events:none;
+}
+.final-hero .tag{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 14px;
+  background:var(--blue-tint);color:var(--blue);border-radius:100px;
+  font-size:12px;font-weight:600;letter-spacing:.02em;margin-bottom:22px;
+}
+.final-hero h2{
+  font-size:clamp(48px,7vw,88px);font-weight:700;letter-spacing:-.04em;line-height:1;
+}
+.final-hero h2 .em{
+  font-family:var(--serif);font-style:italic;font-weight:400;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.final-hero .ft{font-size:19px;color:var(--gray-500);margin-top:18px;max-width:520px;margin-left:auto;margin-right:auto;line-height:1.4}
+
+.final-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0}
+@media(max-width:800px){.final-stats{grid-template-columns:repeat(2,1fr)}}
+
+/* leaderboard */
+.leaderboard{
+  background:var(--white);border-radius:22px;padding:32px;box-shadow:var(--shadow-sm);margin-bottom:24px;
+}
+.lb-head{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;
+}
+.lb-head h3{font-size:22px;font-weight:600;letter-spacing:-.025em;display:flex;align-items:center;gap:10px}
+.lb-head h3 .lb-icon{
+  width:32px;height:32px;border-radius:10px;
+  background:linear-gradient(135deg,var(--yellow),var(--orange));
+  display:flex;align-items:center;justify-content:center;color:white;
+}
+.lb-head h3 .lb-icon svg{width:16px;height:16px}
+.lb-head .cnt{font-size:12px;color:var(--gray-400);font-family:var(--mono)}
+
+.lb-table{width:100%;border-collapse:collapse}
+.lb-table thead th{
+  text-align:left;padding:12px 14px;font-size:11px;font-weight:600;color:var(--gray-400);
+  letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--gray-100);
+}
+.lb-table thead th.right{text-align:right}
+.lb-table tbody td{padding:16px 14px;border-bottom:1px solid var(--gray-100);font-size:14px;letter-spacing:-.01em}
+.lb-table tbody td.right{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:13px}
+.lb-table tbody tr:last-child td{border-bottom:none}
+.lb-table tbody tr.you td{background:var(--blue-tint);color:var(--blue);font-weight:600}
+.lb-table tbody tr.you td:first-child{border-radius:12px 0 0 12px}
+.lb-table tbody tr.you td:last-child{border-radius:0 12px 12px 0}
+.lb-table tbody tr:not(.you):hover td{background:var(--gray-50)}
+
+.lb-rank{display:flex;align-items:center;gap:10px;font-weight:600}
+.lb-rank .medal{
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:white;
+}
+.lb-rank .medal.gold{background:linear-gradient(135deg,#ffd700,#ffa500)}
+.lb-rank .medal.silver{background:linear-gradient(135deg,#c0c0c0,#848484)}
+.lb-rank .medal.bronze{background:linear-gradient(135deg,#cd7f32,#8b4513)}
+.lb-rank .medal.plain{background:var(--gray-100);color:var(--gray-500)}
+.lb-rank .medal.you{background:var(--blue);color:white}
+
+.lb-user{display:flex;align-items:center;gap:10px}
+.lb-user .ava{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,var(--teal),var(--purple));
+  color:white;font-weight:600;font-size:11px;
+  display:flex;align-items:center;justify-content:center;
+}
+.you-tag{
+  font-size:10px;background:var(--blue);color:white;padding:2px 8px;border-radius:100px;
+  margin-left:6px;font-weight:600;letter-spacing:.02em;
+}
+
+.badge-col{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 10px;
+  background:var(--gray-50);border-radius:100px;font-size:12px;font-weight:500;color:var(--gray-800);
+}
+
+.final-actions{display:flex;gap:12px;justify-content:center;margin-top:32px}
+
+/* hidden */
+.hidden{display:none !important}
+
+/* responsive */
+@media(max-width:700px){
+  .nav{padding:0 16px;gap:16px}
+  .nav ul{display:none}
+  .hero{padding:60px 16px 40px}
+  .features-strip{grid-template-columns:1fr}
+  .console-wrap,.game-wrap,.complete-wrap,.final-wrap{padding:24px 16px 60px}
+}
+</style>
+</head>
+<body>
+
+<!-- ========= APPLE-STYLE NAVBAR ========= -->
+<nav class="nav">
+  <div class="logo">
+    <div class="mark">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L3 6v6c0 5.5 3.8 10.6 9 12 5.2-1.4 9-6.5 9-12V6l-9-4z" stroke="currentColor" stroke-width="1.8" fill="currentColor" fill-opacity=".1"/>
+        <path d="M8 12l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    PhishGuard
+  </div>
+  <ul>
+    <li>Console</li>
+    <li>Campaigns</li>
+    <li>Intel</li>
+    <li>Actors</li>
+    <li>Leaderboard</li>
+  </ul>
+  <div class="session-info">
+    <span><span class="dot"></span>Live</span>
+    <span id="sb-session">—</span>
+    <span id="sb-clock">—</span>
+  </div>
+</nav>
+
+<div class="app">
+
+  <!-- ========= LOGIN / HERO ========= -->
+  <section class="view active" id="view-login">
+    <div class="login-view">
+      <div class="hero">
+        <div class="eyebrow">For Email Security Analysts</div>
+        <h1>Spot the threat.<br/>Protect <span class="accent">everyone.</span></h1>
+        <p class="lede">PhishGuard clusters user-reported mail into campaigns, validates origin IPs against threat engines, and scores language urgency — so you can triage faster, with clarity.</p>
+        <div class="hero-pills">
+          <div class="hero-pill"><span class="pdot"></span>30 live campaigns</div>
+          <div class="hero-pill"><span class="pdot"></span>3 clearance tiers</div>
+          <div class="hero-pill"><span class="pdot"></span>Sub-25s triage</div>
+          <div class="hero-pill"><span class="pdot"></span>Campaign clustering</div>
+        </div>
+      </div>
+
+      <div class="login-card-wrap">
+        <div class="login-card">
+          <div class="role-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+            Role · Email Security Analyst
+          </div>
+          <h2>Sign in to your shift.</h2>
+          <p class="sub">Read each campaign, identify the primary threat, narrow the sub-category. Speed and accuracy decide your rank.</p>
+
+          <form id="loginForm" novalidate>
+            <div class="field" id="f-name">
+              <input type="text" id="inp-name" placeholder=" " autocomplete="name"/>
+              <label>Full name</label>
+              <div class="err">Please enter your full name.</div>
+            </div>
+            <div class="field" id="f-email">
+              <input type="email" id="inp-email" placeholder=" " autocomplete="email"/>
+              <label>Work email</label>
+              <div class="err">Please enter a valid email.</div>
+            </div>
+            <button type="submit" class="btn-primary">
+              <span>Begin shift</span>
+              <span class="arrow">→</span>
+            </button>
+          </form>
+
+          <div class="login-foot">
+            <b>Training console.</b> Sample emails are sandboxed. No real links are followed. Session is local to your device.
+          </div>
+        </div>
+      </div>
+
+      <div class="features-strip">
+        <div class="feature-card">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          </div>
+          <h3>Campaign clustering</h3>
+          <p>User-reported emails grouped by origin, sender, and linguistic fingerprints for faster triage at scale.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/><path d="M8 12l3 3 5-6"/></svg>
+          </div>
+          <h3>Automated analysis</h3>
+          <p>SPF / DKIM / DMARC validation, IP reputation against threat engines, and urgency scoring on every message.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20l9-5-9-5-9 5 9 5z"/><path d="M12 12l9-5-9-5-9 5 9 5z"/></svg>
+          </div>
+          <h3>Actor annotation</h3>
+          <p>Tag emails by attack sector, threat actor, or campaign to build institutional memory your team can search.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========= CONSOLE ========= -->
+  <section class="view" id="view-console">
+    <div class="console-wrap">
+      <div class="console-hero">
+        <div>
+          <h2>Operations <span class="em">overview</span></h2>
+          <p>Three clearance tiers. Complete each to unlock the next.</p>
+        </div>
+        <div class="user-pill">
+          <div class="avatar" id="avatar-initials">—</div>
+          <div class="who">
+            <div class="name" id="user-name">—</div>
+            <div class="role">Threat Analyst · Tier <span id="user-tier">I</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card blue">
+          <div class="label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
+            Score
+          </div>
+          <div class="val" id="stat-score">0</div>
+          <div class="sub">of <span id="stat-max">300</span> possible</div>
+        </div>
+        <div class="stat-card green">
+          <div class="label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12l5 5L20 6"/></svg>
+            Accuracy
+          </div>
+          <div class="val" id="stat-acc">—</div>
+          <div class="sub">answers correct</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18"/></svg>
+            Campaigns
+          </div>
+          <div class="val" id="stat-clear">0 / 30</div>
+          <div class="sub">cleared</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="9" r="6"/><path d="M8 13l-2 8 6-3 6 3-2-8"/></svg>
+            Badges
+          </div>
+          <div class="val" id="stat-badges">0 / 3</div>
+          <div class="sub">clearance tokens</div>
+        </div>
+      </div>
+
+      <div class="section-h">
+        <h3>Clearance tiers.</h3>
+        <div class="hint">Complete sequentially</div>
+      </div>
+      <div class="levels-grid" id="levels-grid"></div>
+    </div>
+  </section>
+
+  <!-- ========= GAME ========= -->
+  <section class="view" id="view-game">
+    <div class="game-wrap">
+      <div class="game-top">
+        <button class="back-btn" id="btn-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+          <span>Console</span>
+        </button>
+        <div class="game-lvl-title">
+          <div class="badge" id="g-lvl-badge">Tier I</div>
+          <h2 id="g-lvl-name">—</h2>
+        </div>
+        <div class="game-pills">
+          <div class="game-pill score">Score <b id="g-score">0</b></div>
+          <div class="game-pill streak">Streak <b id="g-streak">0</b></div>
+        </div>
+      </div>
+
+      <!-- Dynamic Island -->
+      <div class="island">
+        <div class="qcount"><b id="g-qnum">01</b> / <span id="g-qtotal">10</span> campaigns</div>
+        <div class="timer-box">
+          <div class="timer-ring" id="g-ring">
+            <svg viewBox="0 0 24 24">
+              <circle class="bg" cx="12" cy="12" r="10"/>
+              <circle class="fg" cx="12" cy="12" r="10" stroke-dasharray="62.83" stroke-dashoffset="0"/>
+            </svg>
+          </div>
+          <span id="g-time">00:25</span>
+        </div>
+      </div>
+
+      <div class="qprogress" id="g-qbar"></div>
+
+      <!-- Apple Mail-style card -->
+      <div class="mail-card">
+        <div class="mail-subject-row">
+          <div class="mail-subject" id="g-subject">—</div>
+          <div class="mail-flags" id="g-flags"></div>
+        </div>
+        <div class="mail-sender">
+          <div class="sender-avatar" id="g-sender-avatar">—</div>
+          <div class="sender-info">
+            <div class="name" id="g-sender-name">—</div>
+            <div class="email" id="g-sender-email">—</div>
+          </div>
+          <div class="sender-time" id="g-sender-time">Today · 9:42 AM</div>
+        </div>
+        <div class="mail-details" id="g-details">
+          <div class="mail-details-head" id="g-details-head">
+            <div class="l">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.5 2.5"/></svg>
+              Show headers &amp; metadata
+            </div>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+          <div class="mail-details-body">
+            <div class="mail-details-body-inner" id="g-details-body"></div>
+          </div>
+        </div>
+        <div class="mail-body" id="g-email-body"></div>
+      </div>
+
+      <!-- L1 -->
+      <div class="classify-block">
+        <div class="classify-label">
+          <span class="step">1</span> Primary threat category
+          <span class="hint">Pick one</span>
+        </div>
+        <div class="threat-grid" id="g-l1"></div>
+      </div>
+
+      <!-- L2 -->
+      <div class="classify-block hidden" id="g-l2-wrap">
+        <div class="classify-label">
+          <span class="step">2</span> Sub-category
+          <span class="hint">Narrow it down</span>
+        </div>
+        <div class="threat-grid l2" id="g-l2"></div>
+      </div>
+
+      <div class="submit-row">
+        <div class="submit-hint" id="submit-hint">Select both to continue</div>
+        <div class="submit-actions">
+          <button class="btn-secondary" id="btn-reset">Reset</button>
+          <button class="btn-submit" id="btn-submit" disabled>
+            <span>Submit</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- iOS-style sheet -->
+    <div class="sheet-overlay" id="fb-overlay">
+      <div class="sheet" id="fb-card">
+        <div class="sheet-handle"></div>
+        <div class="sheet-hdr">
+          <div class="sheet-icon" id="fb-icon"></div>
+          <h3 id="fb-title">—</h3>
+          <div class="s" id="fb-sub">—</div>
+        </div>
+        <div class="sheet-body">
+          <div class="points-display">
+            <div class="pl">Points earned</div>
+            <div class="pv" id="fb-points"><span class="plus">+</span>0</div>
+          </div>
+          <div class="ans-block" id="fb-answers"></div>
+          <div class="explain-box" id="fb-explain"></div>
+        </div>
+        <div class="sheet-foot">
+          <button class="btn-next-q" id="btn-fb-next">
+            <span id="fb-next-label">Next campaign</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========= LEVEL COMPLETE ========= -->
+  <section class="view" id="view-complete">
+    <div class="complete-wrap">
+      <div class="badge-reveal" id="badge-reveal">
+        <div class="badge-tag">
+          <svg class="sparkle" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4L12 2z"/></svg>
+          Badge unlocked
+        </div>
+        <div class="badge-rings">
+          <svg viewBox="0 0 180 180">
+            <circle class="ring bg" cx="90" cy="90" r="76"/>
+            <circle class="ring bg" cx="90" cy="90" r="58"/>
+            <circle class="ring bg" cx="90" cy="90" r="40"/>
+            <circle class="ring r1" cx="90" cy="90" r="76" stroke-dasharray="477.5" stroke-dashoffset="0"/>
+            <circle class="ring r2" cx="90" cy="90" r="58" stroke-dasharray="364.4" stroke-dashoffset="0"/>
+            <circle class="ring r3" cx="90" cy="90" r="40" stroke-dasharray="251.3" stroke-dashoffset="0"/>
+          </svg>
+          <div class="emoji" id="badge-emoji"></div>
+        </div>
+        <h2>You earned <span class="bname" id="badge-name">—</span></h2>
+        <p class="bdesc" id="badge-desc">—</p>
+      </div>
+
+      <div class="results-grid">
+        <div class="result-panel">
+          <h3>Tier Summary</h3>
+          <div class="activity-rings">
+            <svg viewBox="0 0 200 200">
+              <circle class="bg move-bg" cx="100" cy="100" r="85" stroke-width="14"/>
+              <circle class="bg exer-bg" cx="100" cy="100" r="66" stroke-width="14"/>
+              <circle class="bg stand-bg" cx="100" cy="100" r="47" stroke-width="14"/>
+              <circle class="move" id="ring-move" cx="100" cy="100" r="85" stroke-width="14" stroke-dasharray="534.07" stroke-dashoffset="534.07"/>
+              <circle class="exer" id="ring-exer" cx="100" cy="100" r="66" stroke-width="14" stroke-dasharray="414.69" stroke-dashoffset="414.69"/>
+              <circle class="stand" id="ring-stand" cx="100" cy="100" r="47" stroke-width="14" stroke-dasharray="295.31" stroke-dashoffset="295.31"/>
+            </svg>
+            <div class="center-txt">
+              <div class="pct" id="score-pct">0%</div>
+              <div class="pct-lbl">Accuracy</div>
+            </div>
+          </div>
+          <div class="score-mini">
+            <div class="box correct"><b id="score-correct">0</b><div class="lbl">Correct</div></div>
+            <div class="box pts"><b id="score-points">0</b><div class="lbl">Points</div></div>
+            <div class="box missed"><b id="score-missed">0</b><div class="lbl">Missed</div></div>
+          </div>
+        </div>
+        <div class="result-panel">
+          <h3>Category Breakdown</h3>
+          <div id="breakdown-list"></div>
+        </div>
+      </div>
+
+      <div class="complete-actions">
+        <button class="btn-secondary" id="btn-to-console">Back to console</button>
+        <button class="btn-submit" id="btn-next-level">
+          <span id="next-level-label">Continue</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========= FINAL / LEADERBOARD ========= -->
+  <section class="view" id="view-final">
+    <div class="final-wrap">
+      <div class="final-hero">
+        <div class="tag">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4L12 2z"/></svg>
+          Shift complete · All tiers cleared
+        </div>
+        <h2>Analyst <span class="em">cleared.</span></h2>
+        <p class="ft" id="final-tagline">Your shift report is logged. See where you rank on the floor.</p>
+      </div>
+
+      <div class="final-stats">
+        <div class="stat-card blue">
+          <div class="label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/></svg>
+            Total score
+          </div>
+          <div class="val" id="f-score">0</div>
+          <div class="sub">of 300 possible</div>
+        </div>
+        <div class="stat-card green">
+          <div class="label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12l5 5L20 6"/></svg>
+            Accuracy
+          </div>
+          <div class="val" id="f-acc">0%</div>
+          <div class="sub"><span id="f-correct">0</span>/30 correct</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
+            Avg time
+          </div>
+          <div class="val" id="f-avg">0s</div>
+          <div class="sub">per campaign</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M8 12l-2 9 6-3 6 3-2-9"/></svg>
+            Rank
+          </div>
+          <div class="val" id="f-rank">—</div>
+          <div class="sub">on the session floor</div>
+        </div>
+      </div>
+
+      <div class="leaderboard">
+        <div class="lb-head">
+          <h3>
+            <span class="lb-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+            </span>
+            Session leaderboard
+          </h3>
+          <div class="cnt" id="lb-count">—</div>
+        </div>
+        <table class="lb-table">
+          <thead>
+            <tr>
+              <th style="width:90px">Rank</th>
+              <th>Analyst</th>
+              <th>Badge</th>
+              <th class="right">Accuracy</th>
+              <th class="right">Score</th>
+            </tr>
+          </thead>
+          <tbody id="lb-body"></tbody>
+        </table>
+      </div>
+
+      <div class="final-actions">
+        <button class="btn-secondary" id="btn-restart">Restart all tiers</button>
+        <button class="btn-submit" id="btn-logout">End shift</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* =======================================================================
+   PHISHGUARD · Apple Design System · Logic
+   =======================================================================*/
+
+const L1_CATEGORIES = [
+  {v:'Legitimate'},
+  {v:'Phishing & Spoofing'},
+  {v:'Spam & Junk'},
+  {v:'Malicious Content'},
+  {v:'Abuse & Harassment'},
+  {v:'High-Risk Fraud'}
+];
+
+const L2_CATEGORIES = [
+  'Subscription Billing','Security Notification','Newsletter / Platform Notification',
+  'Internal Communication','Shipping Update','Bank / Financial Notification',
+  'Promotional Offer','Credential Harvest','Wire Transfer Scam',
+  'Malware Delivery','Extortion','Romance Scam','Tech Support Scam','Impersonation'
+];
+
+const LVL1 = [
+  {
+    from:'onlinebanking@bankofamerica.com', sender:'onlinebanking@bankofamerica.com', replyTo:'no-reply@bankofamerica.com',
+    subject:'Your February 2026 statement is now available', author:'Bank of America, N.A.',
+    ip:'171.161.199.24 (United States · Bank of America AS)',
+    spf:'PASS', dkim:'PASS', dmarc:'PASS',
+    body:`Your February 2026 statement is now available.
+
+Account: Checking (...4821)
+Statement period: Feb 1 – Feb 28, 2026
+
+Sign in to Online Banking at bankofamerica.com to view your full statement.
+
+Minimum payment due: $0.00
+Next statement date: March 31, 2026
+
+Questions? Call 1-800-432-1000 or visit bankofamerica.com/help.
+
+Bank of America, N.A.
+© 2026 Bank of America Corporation`,
+    l1:'Legitimate', l2:'Bank / Financial Notification',
+    why:`Headers align (SPF/DKIM/DMARC all pass), sender domain matches the displayed brand, and the message contains no links, attachments, or urgency cues. This is a <b>routine statement notification</b> with no call-to-action beyond visiting the brand's canonical domain. Classic legitimate bank notification.`
+  },
+  {
+    from:'no-reply@notifications.linkedin.com', sender:'no-reply@notifications.linkedin.com', replyTo:'no-reply@notifications.linkedin.com',
+    subject:'You have 3 new invitations to connect', author:'LinkedIn',
+    ip:'144.2.21.99 (LinkedIn Corp AS14413)',
+    spf:'PASS', dkim:'PASS', dmarc:'PASS',
+    body:`Hi Jordan,
+
+You have 3 new invitations to connect this week:
+
+• Priya Shah — Product Manager at Cloudflare
+• Marc Dubois — Senior SWE at Shopify
+• Aiko Tanaka — Designer at Figma
+
+Review them on LinkedIn when you have a moment.
+
+You're receiving this because you set your notification preference to weekly digest. Manage settings in your account.
+
+LinkedIn Corporation · 1000 W Maude Ave, Sunnyvale, CA`,
+    l1:'Legitimate', l2:'Newsletter / Platform Notification',
+    why:`Platform digest from LinkedIn's verified notification domain. No urgency, no credential requests, no suspicious links — just a recap the user opted into. SPF/DKIM/DMARC all pass and the footer provides a legitimate physical address.`
+  },
+  {
+    from:'MEGA-WIN@luxe-vouchers.net', sender:'bounce@mailer-svc-22.biz', replyTo:'claim@vouchers-promo.xyz',
+    subject:'🎉 Congratulations Winner! Claim your $500 gift card now!', author:'Luxe Vouchers',
+    ip:'45.142.122.17 (Bulletproof hosting · Seychelles)',
+    spf:'FAIL', dkim:'NONE', dmarc:'FAIL',
+    body:`CONGRATULATIONS!!!
+
+You have been randomly selected as this week's lucky recipient of a $500 Amazon Gift Card!!
+
+Click here: http://luxe-vouchers.net/claim?id=99172
+
+Hurry — this offer EXPIRES in 24 HOURS. Just confirm your shipping details and your reward is on its way!
+
+(This is not spam. If you wish to opt out, reply STOP to this address.)`,
+    l1:'Spam & Junk', l2:'Promotional Offer',
+    why:`Classic sweepstakes spam — bulletproof hosting, mismatched reply-to, SPF/DMARC failure, excessive exclamation marks, and a fake "expires in 24 hours" push. The "random selection" narrative is the tell. Not phishing because it isn't impersonating a brand to harvest credentials — it's just junk trying to farm personal data.`
+  },
+  {
+    from:'order-update@amazon.com', sender:'order-update@amazon.com', replyTo:'no-reply@amazon.com',
+    subject:'Your package has shipped — arriving Thu, Apr 23', author:'Amazon.com',
+    ip:'54.240.8.41 (Amazon SES · Virginia)',
+    spf:'PASS', dkim:'PASS', dmarc:'PASS',
+    body:`Hi Jordan,
+
+Good news — your order has shipped!
+
+Order #112-4498217-0034519
+Tracking: TBA892377301004
+
+Items:
+• "Atomic Habits" (Paperback) × 1
+
+Estimated delivery: Thursday, April 23
+View order details in Your Orders on amazon.com.
+
+Thank you for shopping with us.
+Amazon.com Services LLC`,
+    l1:'Legitimate', l2:'Shipping Update',
+    why:`Legitimate shipment notification from Amazon's canonical sending infrastructure. Headers pass, the order number and tracking number formats match Amazon's real patterns, and there's no embedded link demanding sign-in.`
+  },
+  {
+    from:'newsletter@weekly.techcrunch.com', sender:'newsletter@weekly.techcrunch.com', replyTo:'newsletter@weekly.techcrunch.com',
+    subject:'The Daily Crunch: The week in AI, startups & exits', author:'TechCrunch',
+    ip:'192.30.71.112 (Yahoo/TechCrunch AS)',
+    spf:'PASS', dkim:'PASS', dmarc:'PASS',
+    body:`Good morning.
+
+Here's what moved the tech world this week:
+
+→ Anthropic closes new funding round at $40B valuation
+→ OpenAI's new model scores record on benchmarks
+→ Y Combinator's W26 batch includes record number of AI startups
+→ Apple announces new Vision Pro at WWDC preview
+
+Read more on techcrunch.com
+
+Unsubscribe or update preferences — we'd hate to see you go.
+
+TechCrunch · 410 Townsend St, San Francisco, CA 94107`,
+    l1:'Legitimate', l2:'Newsletter / Platform Notification',
+    why:`Subscribed newsletter. Clear unsubscribe option, physical address, consistent sender/reply-to domains, and content that matches the platform's editorial tone. Perfectly normal daily brief.`
+  },
+  {
+    from:'alert@microsft-security.com', sender:'alert@microsft-security.com', replyTo:'support@microsft-security.com',
+    subject:'URGENT: Unusual sign-in detected on your account', author:'Microsoft Security Team',
+    ip:'91.200.114.42 (Russia · Hosting reseller)',
+    spf:'FAIL', dkim:'FAIL', dmarc:'FAIL',
+    body:`Microsoft Account Security Alert
+
+We detected a sign-in from an unusual location: Lagos, Nigeria.
+
+If this was NOT you, your account may be compromised. You must verify your identity within 24 hours or your account will be permanently disabled.
+
+Verify now: http://microsft-security.com/verify?id=4491
+
+If you do not respond, you will lose access to all Microsoft services including Outlook, OneDrive, and Xbox.
+
+— Microsoft Account Protection`,
+    l1:'Phishing & Spoofing', l2:'Credential Harvest',
+    why:`Text-book credential phishing. The domain is <b>microsft-security.com</b> (missing an 'o') — a classic typosquat. SPF/DKIM/DMARC all fail, the originating IP is in Russia, and the urgency ("24 hours or permanent disable") is designed to bypass critical thinking. Real Microsoft alerts use <b>account.microsoft.com</b> and never threaten permanent lockout in 24 hours.`
+  },
+  {
+    from:'billing@netflix.com', sender:'billing@netflix.com', replyTo:'no-reply@netflix.com',
+    subject:'Your Netflix subscription renews April 28', author:'Netflix, Inc.',
+    ip:'52.89.12.4 (Netflix AS2906)',
+    spf:'PASS', dkim:'PASS', dmarc:'PASS',
+    body:`Hi Jordan,
+
+Just a reminder — your Netflix Premium plan ($22.99/mo) renews on April 28, 2026.
+
+Payment method: Visa ending in 4421.
+
+You don't need to do anything. If you'd like to change your plan or payment method, sign in to netflix.com/account.
+
+Questions? Visit the Help Center.
+
+© 2026 Netflix, Inc.`,
+    l1:'Legitimate', l2:'Subscription Billing',
+    why:`Standard billing reminder from Netflix's authenticated domain. No urgency, no credential prompt, and the user is explicitly told no action is required. Headers align, and the brand's canonical help center is referenced properly.`
+  },
+  {
+    from:'deals@shoptronics-daily.com', sender:'bounces@shoptronics-daily.com', replyTo:'deals@shoptronics-daily.com',
+    subject:'40% OFF storewide — ends at midnight!', author:'ShopTronics Daily',
+    ip:'199.83.126.12 (Email marketing ESP)',
+    spf:'PASS', dkim:'PASS', dmarc:'PASS',
+    body:`Don't miss out!
+
+Today only — 40% off every item storewide. Code: FORTY40.
+
+• Bluetooth headphones from $19
+• Smart bulbs 4-pack: $24
+• HDMI cables (any length): $7
+
+Shop now at shoptronics-daily.com.
+
+Unsubscribe from these emails.
+ShopTronics Daily, 4420 N Ventura Blvd, Los Angeles, CA.`,
+    l1:'Spam & Junk', l2:'Promotional Offer',
+    why:`Low-value promotional blast from a list the user probably didn't remember signing up for. Not malicious — headers pass, unsubscribe is present, and there's a real physical address — but it's classic unsolicited commercial email. Belongs in the promotions bucket.`
+  },
+  {
+    from:'it-helpdesk@yourcompany.com', sender:'it-helpdesk@yourcompany.com', replyTo:'it-helpdesk@yourcompany.com',
+    subject:'[Action required] Quarterly password policy update', author:'Your Company IT',
+    ip:'10.24.18.2 (Internal · Corporate perimeter)',
+    spf:'PASS', dkim:'PASS', dmarc:'PASS',
+    body:`Team,
+
+Per our Q2 security policy, all employees must rotate their Windows domain password by end of day Friday.
+
+Steps:
+1. Press Ctrl + Alt + Del on your corporate workstation
+2. Select "Change a password"
+3. Follow the complexity requirements in the intranet wiki
+
+Do NOT click links in emails to reset your password. All changes must be done directly on your workstation.
+
+Thanks,
+IT Helpdesk
+ext. 3200`,
+    l1:'Legitimate', l2:'Internal Communication',
+    why:`Legitimate internal IT notice. The sending IP is on the internal corporate range, headers pass, and — critically — the message instructs users <b>not</b> to click email links and to change passwords directly at the workstation. That's the opposite of what a phishing email would tell you.`
+  },
+  {
+    from:'support@dropbox-share.co', sender:'support@dropbox-share.co', replyTo:'support@dropbox-share.co',
+    subject:'Someone shared "Q2-Financials.pdf" with you', author:'Dropbox',
+    ip:'185.234.218.9 (Ukraine · Shared hosting)',
+    spf:'FAIL', dkim:'NONE', dmarc:'FAIL',
+    body:`Someone has shared a document with you via Dropbox.
+
+File: Q2-Financials.pdf (1.2 MB)
+Shared by: j.meyer@externalpartner.com
+
+To preview and download, click below and sign in with your work email:
+
+http://dropbox-share.co/preview?doc=4491
+
+This link expires in 48 hours.`,
+    l1:'Phishing & Spoofing', l2:'Credential Harvest',
+    why:`Impersonation of Dropbox's share flow. The real domain is <b>dropbox.com</b>, not <b>dropbox-share.co</b>. The "sign in with your work email" demand is the red flag — Dropbox never asks you to enter credentials on a side domain. Headers fail, origin IP is suspicious. A finance-sounding filename is the lure.`
+  }
+];
+
+const LVL2 = [
+  {
+    from:'ceo@yourcompany.com', sender:'e.kapoor@gmail-support-443.com', replyTo:'ceo.urgent@protonmail.com',
+    subject:'Quick favour — need this done before my 3pm flight', author:'Elena Kapoor, CEO',
+    ip:'103.44.92.118 (Nigeria · Residential ISP)',
+    spf:'FAIL', dkim:'NONE', dmarc:'FAIL',
+    body:`Hi,
+
+Are you at your desk? I need you to handle something confidential before my flight at 3pm — can't call right now, in back-to-back meetings.
+
+I need you to process a wire transfer of $48,750 to a vendor we're signing. Reply to this email (not to my office address — confidential) and I'll send the banking details.
+
+Please don't loop anyone else in. This needs to close today.
+
+Thanks,
+Elena
+Sent from my iPhone`,
+    l1:'High-Risk Fraud', l2:'Wire Transfer Scam',
+    why:`Textbook <b>Business Email Compromise (BEC)</b> / CEO fraud. The <i>display name</i> says "ceo@yourcompany.com" but the actual sender is a Gmail-support lookalike. The reply-to is a Proton address (ensures responses bypass corporate mail). All the social-engineering hallmarks are present: urgency (3pm flight), secrecy ("don't loop anyone else in"), authority impersonation, and a financial ask.`
+  },
+  {
+    from:'docusign@docusign-notify.net', sender:'bounce@mailbot-91.cloud', replyTo:'noreply@docusign-notify.net',
+    subject:'You have a document to sign: "2026_Employment_Addendum.pdf"', author:'DocuSign',
+    ip:'94.140.114.77 (Latvia · VPS)',
+    spf:'FAIL', dkim:'FAIL', dmarc:'FAIL',
+    body:`You have a new document awaiting your signature.
+
+Document: 2026_Employment_Addendum.pdf
+Sent by: HR Department
+
+REVIEW AND SIGN:
+http://docusign-notify.net/sign?id=c7b3f9
+
+This document will expire in 24 hours. Please sign promptly to avoid delays in processing.
+
+DocuSign — The global standard for eSignature.`,
+    l1:'Phishing & Spoofing', l2:'Credential Harvest',
+    why:`DocuSign impersonation. Real DocuSign uses <b>docusign.net</b>, not <b>docusign-notify.net</b>. All three auth checks fail, origin is a VPS in Latvia, and the link goes to the same suspicious domain. The "HR Department" sender and time pressure are designed to trigger compliance. Clicking would land on a cloned sign-in page harvesting corporate credentials.`
+  },
+  {
+    from:'alerts@chase.com', sender:'alerts@chase.com', replyTo:'no-reply@chase.com',
+    subject:'Security alert: new device signed in to your account', author:'Chase',
+    ip:'159.53.116.14 (JPMorgan Chase AS)',
+    spf:'PASS', dkim:'PASS', dmarc:'PASS',
+    body:`We noticed a new sign-in to your Chase account from:
+
+Device: iPhone 15 Pro (Safari)
+Location: Austin, TX
+Time: Apr 20, 2026 7:42 PM CT
+
+If this was you, no action is needed.
+
+If you don't recognize this activity, sign in to chase.com and go to Security Settings to review your sessions, or call the number on the back of your card.
+
+We will never ask you for your password, PIN, or full card number by email.
+
+JPMorgan Chase Bank, N.A., Member FDIC.`,
+    l1:'Legitimate', l2:'Security Notification',
+    why:`Real Chase security notice. Headers fully authenticated, IP belongs to JPMorgan's range, and — crucially — the message directs the user to the official domain or the number on their card rather than providing any clickable link. The explicit "we will never ask for password/PIN" disclaimer is a hallmark of genuine bank communications.`
+  },
+  {
+    from:'invoice-HR@yourcompany.com', sender:'payroll.support@mailservices-hr.com', replyTo:'payroll.support@mailservices-hr.com',
+    subject:'Payroll update: verify your direct deposit details', author:'HR Payroll',
+    ip:'194.163.190.22 (Germany · Hetzner)',
+    spf:'FAIL', dkim:'NONE', dmarc:'FAIL',
+    body:`Hi,
+
+We are updating our payroll system this month. To avoid any disruption to your April 30 paycheck, please verify your direct deposit routing and account number using the portal below.
+
+VERIFY NOW:
+http://payroll-update-portal.com/verify?emp=4419
+
+You must complete this within 48 hours or your next paycheck may be delayed.
+
+— HR Payroll Team`,
+    l1:'High-Risk Fraud', l2:'Wire Transfer Scam',
+    why:`This is a <b>payroll diversion attack</b> — an emerging BEC variant targeting employees, not executives. Attacker redirects the victim's salary to an attacker-controlled account. The display name spoofs internal HR, but the actual sender is an external domain. Asking employees to "re-verify" bank details via an external link is never legitimate HR practice — real payroll changes happen inside the HRIS portal you already log into.`
+  },
+  {
+    from:'support@fedex-track-delivery.com', sender:'shipments@fedex-track-delivery.com', replyTo:'shipments@fedex-track-delivery.com',
+    subject:'[FedEx] Delivery failed — small customs fee required ($2.99)', author:'FedEx',
+    ip:'37.221.126.4 (Russia · Bulletproof)',
+    spf:'FAIL', dkim:'FAIL', dmarc:'FAIL',
+    body:`Dear customer,
+
+Your parcel could not be delivered due to unpaid customs fees.
+
+Tracking: 7749-1128-0041
+Outstanding fee: $2.99
+
+Pay the small fee to release your package for redelivery:
+
+http://fedex-track-delivery.com/customs-fee?t=7749
+
+If unpaid within 24 hours, your parcel will be returned to sender.
+
+FedEx Express.`,
+    l1:'High-Risk Fraud', l2:'Credential Harvest',
+    why:`Classic <b>small-fee package scam</b>. The $2.99 ask is intentionally trivial — victims don't pause to question such a small number, but the real payload is harvesting full card details plus billing address on the payment page. Domain is a typosquat; FedEx uses <b>fedex.com</b>. Headers fully fail. Origin IP is on known bulletproof hosting.`
+  },
+  {
+    from:'github@noreply.github.com', sender:'github@noreply.github.com', replyTo:'noreply@github.com',
+    subject:'[security] New personal access token created on your account', author:'GitHub',
+    ip:'140.82.114.22 (GitHub Inc AS36459)',
+    spf:'PASS', dkim:'PASS', dmarc:'PASS',
+    body:`A new personal access token was created on your account (@jordan-eng).
+
+Token name: "local-dev-april"
+Scopes: repo, read:org
+Created from IP: 73.14.22.108 (Atlanta, GA, US)
+Time: Apr 20, 2026 · 9:14 UTC
+
+If you created this token, no action is required.
+
+If you did NOT create this token, go to github.com/settings/tokens to revoke it immediately, then change your password and enable 2FA if it isn't already on.
+
+— GitHub`,
+    l1:'Legitimate', l2:'Security Notification',
+    why:`Genuine GitHub security notice. Comes from GitHub's authenticated sending infrastructure, and the remediation steps direct the user to go directly to <b>github.com/settings/tokens</b> rather than clicking a link in the email. This is the standard pattern for legitimate security notifications.`
+  },
+  {
+    from:'attachment@invoice-supplier.com', sender:'attachment@invoice-supplier.com', replyTo:'attachment@invoice-supplier.com',
+    subject:'Invoice #INV-2026-04-0772 attached — please review', author:'Supplier Billing',
+    ip:'103.91.210.14 (Vietnam · VPS)',
+    spf:'FAIL', dkim:'NONE', dmarc:'FAIL',
+    body:`Please find attached invoice INV-2026-04-0772 for services rendered in March 2026.
+
+Amount due: $2,184.00
+Due date: April 30, 2026
+
+> Download invoice: INV-2026-04-0772.xlsm
+
+Open the attachment and enable macros to view line items.
+
+If you have questions, reply to this email.
+
+Accounts Receivable`,
+    l1:'Malicious Content', l2:'Malware Delivery',
+    why:`Document-based malware delivery. The critical tell is <b>".xlsm" + "enable macros to view line items"</b>. Legitimate invoices are sent as PDF or static XLSX — never as macro-enabled files with instructions to turn on macros. Enabling macros on an attacker-controlled xlsm routinely drops loaders like Emotet, Qakbot, or Trickbot. SPF/DKIM/DMARC fail, origin is a VPS in Vietnam.`
+  },
+  {
+    from:'security@paypal.com', sender:'security@paypal.com', replyTo:'no-reply@paypal.com',
+    subject:'Your password was changed', author:'PayPal',
+    ip:'173.0.84.43 (PayPal Inc AS17012)',
+    spf:'PASS', dkim:'PASS', dmarc:'PASS',
+    body:`Hello Jordan,
+
+Your PayPal password was changed successfully on Apr 20, 2026, at 14:02 UTC.
+
+If you made this change, you're all set.
+
+If you did NOT make this change, your account may be compromised. Log in directly at paypal.com (do not click this message) and go to Settings › Security to review recent activity and reset your password.
+
+We'll never ask for your password, security question answers, or full bank details via email.
+
+— PayPal Security`,
+    l1:'Legitimate', l2:'Security Notification',
+    why:`Legitimate PayPal security notice. Fully authenticated headers, proper PayPal IP range, no embedded links, and the remediation instruction explicitly tells the user to go directly to <b>paypal.com</b> rather than clicking anything in the email. Textbook safe notification.`
+  },
+  {
+    from:'helpdesk@office365-portal.net', sender:'helpdesk@office365-portal.net', replyTo:'helpdesk@office365-portal.net',
+    subject:'Your mailbox storage is 99% full — click to upgrade', author:'Office 365 Admin',
+    ip:'185.244.149.33 (Moldova · VPN exit)',
+    spf:'FAIL', dkim:'FAIL', dmarc:'FAIL',
+    body:`ATTENTION: Your mailbox is almost full.
+
+Current usage: 99.2% of 50 GB quota.
+New emails may bounce if you do not act now.
+
+Click below to upgrade your quota free of charge:
+
+http://office365-portal.net/upgrade-quota?u=me
+
+This is an automated message from your Office 365 administrator.`,
+    l1:'Phishing & Spoofing', l2:'Credential Harvest',
+    why:`Mailbox-quota phish — one of the most common M365 credential attacks. Real Microsoft 365 quota notices come from <b>microsoft.com</b> or your tenant admin, never from a generic "<b>office365-portal.net</b>" domain. The "99% full, act now" pressure, the external VPN-exit origin, and the failed auth checks all point to a credential harvest page on the other end of that link.`
+  },
+  {
+    from:'support@calendly.com', sender:'support@calendly.com', replyTo:'support@calendly.com',
+    subject:'Meeting confirmed: Product review with Alex Chen', author:'Calendly',
+    ip:'54.173.229.80 (AWS · Calendly Inc)',
+    spf:'PASS', dkim:'PASS', dmarc:'PASS',
+    body:`Your meeting is confirmed.
+
+Event: Product review
+With: Alex Chen (alex@acme.com)
+When: Wed, Apr 23, 2026 · 11:00 AM – 11:30 AM (America/New_York)
+Where: Google Meet (link in calendar invite)
+
+Need to reschedule? Use the link in your calendar invite or reply to this email.
+
+Calendly, Inc.`,
+    l1:'Legitimate', l2:'Newsletter / Platform Notification',
+    why:`Standard Calendly confirmation. All authentication checks pass, the sending IP is Calendly's AWS range, and the message contains no credential prompts, attachments, or suspicious links. The "where" references a Google Meet link in the calendar invite, which is expected behaviour.`
+  }
+];
+
+const LVL3 = [
+  {
+    from:'noreply@apple.com', sender:'reply@privaterelay-forwarding.icloud-mail.help', replyTo:'reply@privaterelay-forwarding.icloud-mail.help',
+    subject:'[Apple ID] Your receipt from Apple — $699.00 charge for iPhone Pro Case', author:'Apple',
+    ip:'45.91.22.18 (Panama · VPS)',
+    spf:'FAIL', dkim:'NONE', dmarc:'FAIL',
+    body:`RECEIPT FROM APPLE
+
+Order ID: MHZL4820XX
+Date: Apr 20, 2026
+Billed to: Visa ending in 4421
+
+1× iPhone 15 Pro Ultra Case (Premium Titanium) — $699.00
+Tax — $57.67
+Total — $756.67
+
+If you did not authorize this purchase, cancel within 24 hours:
+→ http://icloud-mail.help/cancel?order=MHZL4820XX
+
+Apple Inc. · One Apple Park Way, Cupertino, CA 95014`,
+    l1:'High-Risk Fraud', l2:'Credential Harvest',
+    why:`Fake-receipt phish, a highly effective pattern because the "If this wasn't you, CANCEL" link is what the target clicks — they're trying to prevent a charge, not sign up for something. The display name says Apple but the real reply-to is <b>icloud-mail.help</b>, a lookalike. Apple receipts always come from <b>no_reply@email.apple.com</b> and never include external cancel links. SPF/DKIM/DMARC all fail.`
+  },
+  {
+    from:'legal@yourlawfirm.com', sender:'legal.notice@smtp-mailer-delivery.net', replyTo:'legal@yourlawfirm.com',
+    subject:'Confidential: Subpoena response required — case #24-CV-00918', author:'Whitmore & Associates LLP',
+    ip:'172.104.28.211 (Linode · Singapore)',
+    spf:'FAIL', dkim:'NONE', dmarc:'FAIL',
+    body:`COUNSEL,
+
+A federal subpoena has been issued in the matter of Case #24-CV-00918 naming your organization as a material witness.
+
+The full subpoena and response instructions are available at the secure counsel portal. You must review and acknowledge receipt within 72 hours to preserve procedural rights.
+
+Secure portal (single-use link):
+http://legal-counsel-secure.net/subpoena/case-24-cv-00918
+
+This communication is privileged and confidential. Do not forward.
+
+Whitmore & Associates LLP
+Attorneys at Law`,
+    l1:'Phishing & Spoofing', l2:'Credential Harvest',
+    why:`<b>Legal-threat phishing</b> targeting executives and legal counsel. The fear of legal consequences ("preserve procedural rights", "72 hours") bypasses skepticism. Real law firms communicate subpoenas via a known retained-counsel relationship and certified mail — never via a "secure portal" hosted on an unrelated domain (<b>legal-counsel-secure.net</b>). Headers fail, origin is a Linode VPS. High-sophistication impersonation.`
+  },
+  {
+    from:'onmicrosoft@security.microsoft.com', sender:'onmicrosoft@security.microsoft.com', replyTo:'no-reply@microsoft.com',
+    subject:'Microsoft Defender: High-severity sign-in detected and blocked', author:'Microsoft Defender for Identity',
+    ip:'40.96.3.118 (Microsoft Corp AS8075)',
+    spf:'PASS', dkim:'PASS', dmarc:'PASS',
+    body:`A high-severity sign-in attempt was blocked by Microsoft Defender for Identity.
+
+User: jordan@yourcompany.com
+Risk level: HIGH
+Reason: impossible-travel (Atlanta, GA → Lagos, NG in 14 min)
+Action taken: Sign-in blocked. MFA challenge enforced on next attempt.
+
+No action required from you. Your IT administrator has been notified.
+
+Review in the Defender portal if you want more context:
+security.microsoft.com
+
+Microsoft Corporation · One Microsoft Way, Redmond, WA`,
+    l1:'Legitimate', l2:'Security Notification',
+    why:`A genuine Defender for Identity alert. All auth checks pass, origin is Microsoft's AS8075, and the remediation tells the user to <b>go directly</b> to <b>security.microsoft.com</b> — no clickable link in the body. Sophisticated analysts sometimes flag these by mistake because the content sounds alarming, but the tells are all positive: authenticated headers, canonical domain, no external CTA.`
+  },
+  {
+    from:'sextortion-bot-99124@protonmail.com', sender:'sextortion-bot-99124@protonmail.com', replyTo:'sextortion-bot-99124@protonmail.com',
+    subject:'I know your password: Spring2021! — pay or I release footage', author:'—',
+    ip:'185.70.41.35 (Switzerland · Proton)',
+    spf:'PASS', dkim:'PASS', dmarc:'PASS',
+    body:`Hi. Your password is Spring2021! — I'll prove I have access.
+
+I installed spyware on your computer months ago. I have recorded you through your webcam while you visited certain websites. I also have your contacts list.
+
+If you don't want me to send the footage to everyone, send $1,450 in Bitcoin to the address below within 48 hours:
+
+bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh
+
+Do NOT reply to this email. Do NOT contact police. I'll know. The timer starts now.`,
+    l1:'Abuse & Harassment', l2:'Extortion',
+    why:`<b>Sextortion scam</b>. The "proof" password is almost always from an old third-party data breach the attacker harvested — not evidence of any actual compromise. There is no spyware, no footage. These are sent at massive scale. Categorize as Abuse/Extortion (not phishing — they aren't harvesting credentials, they're directly extorting money). Never pay; rotate the exposed password everywhere it's reused.`
+  },
+  {
+    from:'partner@trusted-vendor.com', sender:'partner@trusted-vendor.com', replyTo:'partner.accounting@trusted-vendor.co',
+    subject:'RE: Updated ACH routing for April invoice', author:'TrustedVendor — Accounting',
+    ip:'66.45.22.9 (US · shared hosting, new registration)',
+    spf:'PASS', dkim:'PASS', dmarc:'PASS',
+    body:`Hi Jordan,
+
+Quick heads-up — we've migrated banks. For the April invoice (INV-00912, $62,400), please route payment to the new account below instead of the one on file:
+
+Bank: Citibank
+Routing: 021000089
+Account: 0047 1192 8841
+Beneficiary: TrustedVendor LLC
+
+Everything else on the invoice stays the same. Please confirm the update on your end so we can close the cycle.
+
+Thanks,
+Rachel Connors
+Accounting — TrustedVendor`,
+    l1:'High-Risk Fraud', l2:'Wire Transfer Scam',
+    why:`<b>Vendor-email-compromise (VEC)</b> — the hardest class to detect because the actual sending account may have been taken over, so SPF/DKIM/DMARC all pass. The two subtle tells: (1) reply-to is <b>.co</b> while the sender is <b>.com</b> (attacker wants responses to go to a lookalike), and (2) unsolicited bank-change requests are the #1 BEC pattern in the wild. Mitigation: always verify banking-detail changes via a known-good phone number, never via the email thread itself.`
+  },
+  {
+    from:'billing@stripe.com', sender:'billing@stripe.com', replyTo:'support@stripe.com',
+    subject:'Your Stripe payout of $12,480 has been initiated', author:'Stripe',
+    ip:'54.187.216.72 (Stripe Inc AS54206)',
+    spf:'PASS', dkim:'PASS', dmarc:'PASS',
+    body:`Hi Jordan,
+
+A payout has been initiated from your Stripe account.
+
+Amount: $12,480.00
+Arrival: Apr 22, 2026 (estimated)
+Destination: Chase •••• 8829
+Payout ID: po_1MFq8JK...
+
+You can view payout details in your Stripe Dashboard at dashboard.stripe.com.
+
+Questions? Reply here or contact support via the dashboard.
+
+— Stripe`,
+    l1:'Legitimate', l2:'Bank / Financial Notification',
+    why:`Legitimate Stripe payout notification. Authentication passes, Stripe's AS, canonical dashboard reference, no external CTA link. Analysts sometimes overflag payout notifications because the amount feels "phishy" — but the content is an FYI, not a call to click anything. Classic legit financial notification.`
+  },
+  {
+    from:'dhl.delivery@express-parcel-service.info', sender:'dhl.delivery@express-parcel-service.info', replyTo:'dhl.delivery@express-parcel-service.info',
+    subject:'DHL: Open attached waybill to schedule redelivery', author:'DHL Express',
+    ip:'45.61.184.3 (Seychelles · Bulletproof)',
+    spf:'FAIL', dkim:'FAIL', dmarc:'FAIL',
+    body:`Dear valued customer,
+
+We were unable to deliver your package today. Please open the attached waybill (DHL_Waybill_9817.iso) and follow the instructions to schedule redelivery.
+
+Tracking: DHL9817221
+Status: Delivery attempt failed
+
+Open the attached document now to reschedule. Failure to respond within 5 days will result in your package being returned.
+
+Best regards,
+DHL Express Team`,
+    l1:'Malicious Content', l2:'Malware Delivery',
+    why:`<b>ISO-attachment malware</b>. The ".iso" extension is the critical tell — it's a disk image format used to smuggle executable loaders (IcedID, Qakbot, Bumblebee) past email scanners that don't deep-inspect mounted volumes. No legitimate shipping carrier sends an ISO. DHL uses <b>dhl.com</b>, not <b>express-parcel-service.info</b>. All auth fails, origin is bulletproof hosting.`
+  },
+  {
+    from:'abuse-report@yourcompany.com', sender:'abuse-report@yourcompany.com', replyTo:'abuse-report@yourcompany.com',
+    subject:'[internal] Quarterly abuse cluster report — Q1 2026', author:'SecOps · PhishGuard',
+    ip:'10.18.4.22 (Internal · SecOps subnet)',
+    spf:'PASS', dkim:'PASS', dmarc:'PASS',
+    body:`SecOps — Quarterly Report · Q1 2026
+
+• User-reported mail volume: 14,221 (+12% QoQ)
+• Confirmed phishing campaigns clustered: 38
+• BEC attempts blocked at gateway: 91
+• Malware payloads sandboxed & detonated: 27
+
+Top impersonated brands this quarter:
+1. Microsoft (31%)
+2. DocuSign (14%)
+3. Internal HR / Payroll (9%)
+
+Full dashboards are in the SecOps Confluence space. No action required from recipients — this is an FYI.
+
+— PhishGuard SecOps`,
+    l1:'Legitimate', l2:'Internal Communication',
+    why:`Genuine internal SecOps report. Internal IP range, fully authenticated, no external links, no calls to action, and the content is consistent with quarterly metrics reporting. Internal comms like this are often over-reported as "suspicious" because they contain the word <i>phishing</i> — but the metadata is clean.`
+  },
+  {
+    from:'matches@singles-today-love.com', sender:'matches@singles-today-love.com', replyTo:'sofia_m22@outlook.com',
+    subject:'Sofia wants to meet you — view her profile now', author:'Singles Today',
+    ip:'194.15.36.112 (Romania · Hosting reseller)',
+    spf:'SOFTFAIL', dkim:'NONE', dmarc:'FAIL',
+    body:`Hey handsome,
+
+I saw your profile on a dating app and I can't stop thinking about you 😘
+
+I'm Sofia, 28, from Kyiv. I recently moved and I'm looking for someone serious. Your eyes are beautiful.
+
+Can we chat somewhere more private? Reply to me directly at sofia_m22@outlook.com — I don't check this platform much.
+
+Would love to hear from you 💕
+
+— Sofia`,
+    l1:'High-Risk Fraud', l2:'Romance Scam',
+    why:`<b>Romance-scam opener</b>. The pattern is textbook: flattery ("your eyes are beautiful"), attractive young woman from overseas, immediate push to move off-platform to a personal email. Headers are weak (SPF softfail, no DKIM, DMARC fail). These scams typically pivot within a few exchanges to requests for money — medical emergencies, travel funds, or cryptocurrency "investment opportunities" the victim can "join" with her.`
+  },
+  {
+    from:'noreply@zoom.us', sender:'noreply@zoom.us', replyTo:'noreply@zoom.us',
+    subject:'You\'ve been invited: "Design review" — Thu Apr 23, 2:00 PM', author:'Zoom',
+    ip:'170.114.52.31 (Zoom Video Communications AS)',
+    spf:'PASS', dkim:'PASS', dmarc:'PASS',
+    body:`Jordan,
+
+You've been invited to a Zoom meeting by Kevin Park (kevin@yourcompany.com).
+
+Topic: Design review
+When: Thursday, Apr 23, 2026 · 2:00 PM – 3:00 PM ET
+
+Join Zoom Meeting:
+https://zoom.us/j/84729916223?pwd=...
+
+Meeting ID: 847 2991 6223
+Passcode: 491728
+
+Add to your calendar: [Google] [Outlook] [iCal]
+
+Zoom Video Communications, Inc.`,
+    l1:'Legitimate', l2:'Internal Communication',
+    why:`Legitimate Zoom meeting invitation. All auth passes, origin IP is Zoom's, and the join URL uses the canonical <b>zoom.us/j/</b> path. The organizer is an internal colleague on the corporate domain. Nothing about this message is suspicious — straightforward calendar coordination.`
+  }
+];
+
+const LEVELS = [
+  {name:'Inbox Triage', tagline:'Routine reports. Separate legitimate traffic from the obvious noise.', questions:LVL1, badgeName:'Signal Reader', badgeEmoji:'📡', badgeDesc:'You can tell normal noise from a real distress call.', time:25, pointsPer:10},
+  {name:'Campaign Analyst', tagline:'Targeted attacks. BEC, malware, and credential theft at scale.', questions:LVL2, badgeName:'Cluster Hunter', badgeEmoji:'🎯', badgeDesc:'You recognize campaigns, not just individual emails.', time:25, pointsPer:10},
+  {name:'Threat Actor Intel', tagline:'Sophisticated, nuanced threats. VEC, legal lures, ISO malware.', questions:LVL3, badgeName:'Actor Profiler', badgeEmoji:'🛡️', badgeDesc:'You can see the hand behind the keyboard.', time:25, pointsPer:10}
+];
+
+/* ---------- STATE ---------- */
+const state = {
+  user:null, currentLevel:0,
+  unlocked:[true,false,false], completed:[false,false,false], levelResults:[null,null,null],
+  q:0, qScore:0, streak:0, correctCount:0, answers:[],
+  timer:null, timeLeft:25, chosenL1:null, chosenL2:null, totalTime:0
+};
+
+/* ---------- UTIL ---------- */
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const pad = n => n.toString().padStart(2,'0');
+const initials = n => n.trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+function show(id){
+  $$('.view').forEach(v=>v.classList.remove('active'));
+  $(`#${id}`).classList.add('active');
+  window.scrollTo({top:0,behavior:'instant'});
+}
+
+/* ---------- CLOCK ---------- */
+function tick(){
+  const d = new Date();
+  $('#sb-clock').textContent = `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`;
+}
+setInterval(tick,1000); tick();
+
+/* ---------- Field floating label ---------- */
+['inp-name','inp-email'].forEach(id=>{
+  const el = document.getElementById(id);
+  el.addEventListener('input',()=>{
+    el.parentElement.classList.toggle('filled', !!el.value);
+  });
+});
+
+/* ---------- LOGIN ---------- */
+$('#loginForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = $('#inp-name').value.trim();
+  const email = $('#inp-email').value.trim();
+  let ok = true;
+  if(!name){ $('#f-name').classList.add('error'); ok=false; } else $('#f-name').classList.remove('error');
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ $('#f-email').classList.add('error'); ok=false; } else $('#f-email').classList.remove('error');
+  if(!ok) return;
+
+  state.user = {name,email};
+  $('#sb-session').textContent = 'SID-'+Math.random().toString(36).slice(2,7).toUpperCase();
+  $('#user-name').textContent = name;
+  $('#avatar-initials').textContent = initials(name);
+  renderConsole();
+  show('view-console');
+});
+
+/* ---------- CONSOLE ---------- */
+function renderConsole(){
+  const totalScore = state.levelResults.reduce((a,r)=>a+(r?r.score:0),0);
+  const totalMax = LEVELS.reduce((a,l)=>a+l.questions.length*l.pointsPer,0);
+  const totalCorrect = state.levelResults.reduce((a,r)=>a+(r?r.correct:0),0);
+  const totalQs = state.levelResults.reduce((a,r)=>a+(r?r.total:0),0);
+  const totalCamps = LEVELS.reduce((a,l)=>a+l.questions.length,0);
+  const badges = state.completed.filter(x=>x).length;
+
+  $('#stat-score').textContent = totalScore;
+  $('#stat-max').textContent = totalMax;
+  $('#stat-acc').textContent = totalQs>0 ? Math.round(totalCorrect/totalQs*100)+'%' : '—';
+  $('#stat-clear').textContent = `${totalQs} / ${totalCamps}`;
+  $('#stat-badges').textContent = `${badges} / 3`;
+  $('#user-tier').textContent = ['I','II','III'][Math.min(badges,2)];
+
+  const grid = $('#levels-grid'); grid.innerHTML='';
+  LEVELS.forEach((lvl,i)=>{
+    const unlocked = state.unlocked[i];
+    const completed = state.completed[i];
+    const cls = ['level-card','tier-'+(i+1), unlocked?'':'locked', completed?'completed':''].join(' ');
+    const card = document.createElement('div');
+    card.className = cls;
+    card.style.animationDelay = (i*0.08)+'s';
+    card.style.animation = 'fadeUp .7s var(--ease-out) both';
+    card.innerHTML = `
+      <div class="level-num-wrap">
+        <div class="level-num">0${i+1}</div>
+        <div class="level-status">${completed ? 'Cleared' : (unlocked ? 'Available' : 'Locked')}</div>
+        <div class="lock-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 118 0v4"/></svg>
+        </div>
+      </div>
+      <h4>${lvl.name}</h4>
+      <div class="level-desc">${lvl.tagline}</div>
+      <div class="level-meta">
+        <div><div class="mval">${lvl.questions.length}</div><div class="mlbl">Emails</div></div>
+        <div><div class="mval">${lvl.questions.length*lvl.pointsPer}</div><div class="mlbl">Max points</div></div>
+        <div><div class="mval">${lvl.time}s</div><div class="mlbl">Per round</div></div>
+      </div>
+      <div class="cta">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </div>
+    `;
+    if(unlocked) card.addEventListener('click',()=>startLevel(i));
+    grid.appendChild(card);
+  });
+}
+
+/* ---------- START LEVEL ---------- */
+function startLevel(i){
+  state.currentLevel = i;
+  state.q = 0; state.qScore = 0; state.streak = 0; state.correctCount = 0;
+  state.answers = []; state.totalTime = 0;
+  const lvl = LEVELS[i];
+  $('#g-lvl-badge').textContent = `Tier ${['I','II','III'][i]}`;
+  $('#g-lvl-name').textContent = lvl.name;
+  $('#g-qtotal').textContent = lvl.questions.length;
+  renderQbar();
+  renderL1Chips();
+  renderL2Chips();
+  show('view-game');
+  loadQuestion();
+}
+
+/* ---------- Progress bar segments ---------- */
+function renderQbar(){
+  const bar = $('#g-qbar'); bar.innerHTML='';
+  const lvl = LEVELS[state.currentLevel];
+  for(let i=0;i<lvl.questions.length;i++){
+    const seg = document.createElement('div');
+    seg.className='seg';
+    if(i===state.q) seg.classList.add('current');
+    else if(state.answers[i]==='correct') seg.classList.add('correct');
+    else if(state.answers[i]==='wrong') seg.classList.add('wrong');
+    bar.appendChild(seg);
+  }
+}
+
+/* ---------- chips ---------- */
+function renderL1Chips(){
+  const grid = $('#g-l1'); grid.innerHTML='';
+  L1_CATEGORIES.forEach(c=>{
+    const b = document.createElement('button');
+    b.className='threat-chip';
+    b.dataset.v = c.v;
+    b.innerHTML = `<span class="dot"></span><span class="tname">${c.v}</span>`;
+    b.addEventListener('click',()=>selectL1(c.v));
+    grid.appendChild(b);
+  });
+}
+function renderL2Chips(){
+  const grid = $('#g-l2'); grid.innerHTML='';
+  L2_CATEGORIES.forEach(v=>{
+    const b = document.createElement('button');
+    b.className='threat-chip';
+    b.dataset.l2='1'; b.dataset.v = v;
+    b.innerHTML = `<span class="dot"></span><span class="tname">${v}</span>`;
+    b.addEventListener('click',()=>selectL2(v));
+    grid.appendChild(b);
+  });
+}
+function selectL1(v){
+  state.chosenL1 = v; state.chosenL2 = null;
+  $$('#g-l1 .threat-chip').forEach(c=>c.classList.toggle('selected',c.dataset.v===v));
+  $$('#g-l2 .threat-chip').forEach(c=>c.classList.remove('selected'));
+  $('#g-l2-wrap').classList.remove('hidden');
+  setTimeout(()=>$('#g-l2-wrap').scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+  $('#btn-submit').disabled = true;
+  $('#submit-hint').textContent = 'Pick a sub-category to continue';
+}
+function selectL2(v){
+  state.chosenL2 = v;
+  $$('#g-l2 .threat-chip').forEach(c=>c.classList.toggle('selected',c.dataset.v===v));
+  const ready = state.chosenL1 && state.chosenL2;
+  $('#btn-submit').disabled = !ready;
+  $('#submit-hint').textContent = ready ? 'Ready — submit your classification' : 'Select both to continue';
+}
+
+/* ---------- LOAD QUESTION ---------- */
+function loadQuestion(){
+  const lvl = LEVELS[state.currentLevel];
+  const q = lvl.questions[state.q];
+  $('#g-qnum').textContent = pad(state.q+1);
+  $('#g-subject').textContent = q.subject;
+  $('#g-email-body').textContent = q.body;
+  $('#g-score').textContent = state.qScore;
+  $('#g-streak').textContent = state.streak;
+
+  // sender card
+  $('#g-sender-name').textContent = q.author;
+  $('#g-sender-email').textContent = q.from;
+  $('#g-sender-avatar').textContent = initials(q.author || 'U');
+
+  // flags
+  const flags = [];
+  if(q.spf==='FAIL'||q.dkim==='FAIL'||q.dmarc==='FAIL'){
+    flags.push(`<div class="mail-flag bad" title="Auth failed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg></div>`);
+  }
+  if(q.sender!==q.from || q.replyTo!==q.from){
+    flags.push(`<div class="mail-flag warn" title="Header mismatch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg></div>`);
+  }
+  if(flags.length===0){
+    flags.push(`<div class="mail-flag" title="Clean"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12l5 5L20 6"/></svg></div>`);
+  }
+  $('#g-flags').innerHTML = flags.join('');
+
+  // details
+  const pill = v => {
+    const cls = v==='PASS'?'pass':(v==='FAIL'?'fail':'none');
+    return `<span class="auth-pill ${cls}">${v}</span>`;
+  };
+  const flag = q.ip.match(/Russia|Ukraine|Nigeria|Seychelles|Moldova|Bulletproof|VPS|reseller|Panama|Vietnam|Romania|Latvia|Singapore/i) ? 'flag' : '';
+  $('#g-details-body').innerHTML = `
+    <div class="k">From</div> <div class="v">${q.from}</div>
+    <div class="k">Sender</div> <div class="v ${q.sender!==q.from?'flag':''}">${q.sender}</div>
+    <div class="k">Reply-To</div> <div class="v ${q.replyTo!==q.from?'flag':''}">${q.replyTo}</div>
+    <div class="k">Author</div> <div class="v">${q.author}</div>
+    <div class="k">Origin IP</div> <div class="v ${flag}">${q.ip}</div>
+    <div class="k">Auth</div> <div class="v"><div class="auth-pills">SPF ${pill(q.spf)} DKIM ${pill(q.dkim)} DMARC ${pill(q.dmarc)}</div></div>
+  `;
+
+  // reset choices
+  state.chosenL1 = null; state.chosenL2 = null;
+  $$('#g-l1 .threat-chip, #g-l2 .threat-chip').forEach(c=>c.classList.remove('selected'));
+  $('#g-l2-wrap').classList.add('hidden');
+  $('#btn-submit').disabled = true;
+  $('#submit-hint').textContent = 'Select both to continue';
+  $('#g-details').classList.remove('open');
+
+  renderQbar();
+  startTimer();
+}
+
+/* ---------- TIMER ---------- */
+function startTimer(){
+  const lvl = LEVELS[state.currentLevel];
+  state.timeLeft = lvl.time;
+  updateTimerUI();
+  if(state.timer) clearInterval(state.timer);
+  state.timer = setInterval(()=>{
+    state.timeLeft--;
+    state.totalTime++;
+    updateTimerUI();
+    if(state.timeLeft<=0){
+      clearInterval(state.timer);
+      submitAnswer(true);
+    }
+  },1000);
+}
+function updateTimerUI(){
+  const lvl = LEVELS[state.currentLevel];
+  const pct = state.timeLeft/lvl.time;
+  $('#g-time').textContent = `00:${pad(Math.max(0,state.timeLeft))}`;
+  const fg = $('#g-ring .fg');
+  const circumference = 2*Math.PI*10;
+  fg.setAttribute('stroke-dasharray', circumference);
+  fg.setAttribute('stroke-dashoffset', circumference*(1-pct));
+  const ring = $('#g-ring');
+  ring.classList.toggle('warn', state.timeLeft<=10 && state.timeLeft>5);
+  ring.classList.toggle('danger', state.timeLeft<=5);
+}
+
+/* ---------- SUBMIT ---------- */
+function submitAnswer(timeout){
+  if(state.timer) clearInterval(state.timer);
+  const lvl = LEVELS[state.currentLevel];
+  const q = lvl.questions[state.q];
+  const correct = !timeout && state.chosenL1===q.l1 && state.chosenL2===q.l2;
+  const partial = !timeout && state.chosenL1===q.l1 && state.chosenL2!==q.l2;
+  const earned = correct ? lvl.pointsPer : (partial ? Math.floor(lvl.pointsPer/2) : 0);
+  state.qScore += earned;
+  if(correct){ state.correctCount++; state.streak++; state.answers[state.q]='correct'; }
+  else { state.streak=0; state.answers[state.q]='wrong'; }
+  showFeedback({correct,partial,timeout,earned,q});
+}
+
+function showFeedback({correct,partial,timeout,earned,q}){
+  const card = $('#fb-card');
+  card.classList.remove('correct','wrong');
+  card.classList.add(correct?'correct':'wrong');
+
+  $('#fb-icon').innerHTML = correct
+    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 10 18 20 6"/></svg>`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>`;
+
+  if(correct){ $('#fb-title').textContent='Correctly classified.'; $('#fb-sub').textContent='Campaign resolved'; }
+  else if(timeout){ $('#fb-title').textContent='Time expired.'; $('#fb-sub').textContent='No classification submitted'; }
+  else if(partial){ $('#fb-title').textContent='Close — half credit.'; $('#fb-sub').textContent='Primary category correct'; }
+  else { $('#fb-title').textContent='Misclassified.'; $('#fb-sub').textContent='Review the analysis below'; }
+
+  $('#fb-points').innerHTML = `<span class="plus">+</span>${earned}`;
+
+  const chose1 = state.chosenL1 || 'No answer';
+  const chose2 = state.chosenL2 || 'No answer';
+  const c1Cls = state.chosenL1===q.l1 ? 'good-ans' : 'wrong-ans';
+  const c2Cls = state.chosenL2===q.l2 ? 'good-ans' : 'wrong-ans';
+
+  $('#fb-answers').innerHTML = correct ? `
+    <div class="ans-row good-ans"><span class="al">Your answer</span><span class="av">${chose1} · ${chose2}</span></div>
+  ` : `
+    <div class="ans-row ${c1Cls}"><span class="al">Your L1</span><span class="av">${chose1}</span></div>
+    <div class="ans-row correct-ans"><span class="al">Correct L1</span><span class="av">${q.l1}</span></div>
+    <div class="ans-row ${c2Cls}" style="margin-top:10px"><span class="al">Your L2</span><span class="av">${chose2}</span></div>
+    <div class="ans-row correct-ans"><span class="al">Correct L2</span><span class="av">${q.l2}</span></div>
+  `;
+
+  const tagMap = {
+    'Phishing & Spoofing':{t:'Phishing',c:'risk'},
+    'Legitimate':{t:'Legitimate',c:'safe'},
+    'Spam & Junk':{t:'Spam',c:'warn'},
+    'Malicious Content':{t:'Malware',c:'risk'},
+    'Abuse & Harassment':{t:'Abuse',c:'risk'},
+    'High-Risk Fraud':{t:'Fraud',c:'risk'}
+  };
+  const t = tagMap[q.l1] || {t:'Analysis',c:'neutral'};
+  $('#fb-explain').innerHTML = `
+    <div class="tag-row">
+      <span class="tag ${t.c}">${t.t}</span>
+      <span class="tag neutral">${q.l2}</span>
+    </div>
+    ${q.why}
+  `;
+
+  const isLast = state.q === LEVELS[state.currentLevel].questions.length - 1;
+  $('#fb-next-label').textContent = isLast ? 'View tier report' : 'Next campaign';
+  $('#fb-overlay').classList.add('show');
+}
+
+$('#btn-fb-next').addEventListener('click',()=>{
+  $('#fb-overlay').classList.remove('show');
+  const lvl = LEVELS[state.currentLevel];
+  if(state.q === lvl.questions.length-1) finishLevel();
+  else { state.q++; loadQuestion(); }
+});
+
+$('#btn-submit').addEventListener('click',()=>submitAnswer(false));
+$('#btn-reset').addEventListener('click',()=>{
+  state.chosenL1=null; state.chosenL2=null;
+  $$('#g-l1 .threat-chip, #g-l2 .threat-chip').forEach(c=>c.classList.remove('selected'));
+  $('#g-l2-wrap').classList.add('hidden');
+  $('#btn-submit').disabled = true;
+  $('#submit-hint').textContent = 'Select both to continue';
+});
+$('#g-details-head').addEventListener('click',()=>$('#g-details').classList.toggle('open'));
+$('#btn-back').addEventListener('click',()=>{
+  if(confirm('Abort session? Progress will be lost.')){
+    if(state.timer) clearInterval(state.timer);
+    show('view-console');
+  }
+});
+
+/* ---------- FINISH LEVEL ---------- */
+function finishLevel(){
+  if(state.timer) clearInterval(state.timer);
+  const lvl = LEVELS[state.currentLevel];
+  const total = lvl.questions.length;
+  const correct = state.correctCount;
+  const missed = total - correct;
+  const score = state.qScore;
+  const acc = Math.round(correct/total*100);
+  const breakdown = {};
+  L1_CATEGORIES.forEach(c => breakdown[c.v]={correct:0,total:0});
+  lvl.questions.forEach((q,i)=>{
+    breakdown[q.l1].total++;
+    if(state.answers[i]==='correct') breakdown[q.l1].correct++;
+  });
+  state.levelResults[state.currentLevel] = {score,correct,missed,total,acc,breakdown,time:state.totalTime};
+  state.completed[state.currentLevel] = true;
+  if(state.currentLevel<2) state.unlocked[state.currentLevel+1] = true;
+  renderComplete();
+  show('view-complete');
+}
+
+/* ---------- COMPLETE VIEW ---------- */
+function renderComplete(){
+  const i = state.currentLevel;
+  const lvl = LEVELS[i];
+  const r = state.levelResults[i];
+
+  $('#badge-emoji').textContent = lvl.badgeEmoji;
+  $('#badge-name').textContent = lvl.badgeName;
+  $('#badge-desc').textContent = lvl.badgeDesc;
+
+  // confetti
+  const reveal = $('#badge-reveal');
+  reveal.querySelectorAll('.confetti').forEach(c=>c.remove());
+  const colors = ['var(--blue)','var(--green)','var(--purple)','var(--orange)','var(--pink)','var(--yellow)'];
+  for(let k=0;k<36;k++){
+    const c = document.createElement('div');
+    c.className='confetti';
+    c.style.background = colors[k%colors.length];
+    c.style.left = (25+Math.random()*50)+'%';
+    c.style.setProperty('--x', (Math.random()*700-350)+'px');
+    c.style.setProperty('--y', (Math.random()*400+300)+'px');
+    c.style.setProperty('--r', (Math.random()*720-360)+'deg');
+    c.style.animationDelay = (Math.random()*0.5)+'s';
+    reveal.appendChild(c);
+  }
+
+  // Activity rings — move=accuracy, exercise=score%, stand=correctness ratio weighted
+  const circ85 = 2*Math.PI*85;
+  const circ66 = 2*Math.PI*66;
+  const circ47 = 2*Math.PI*47;
+  const movePct = r.acc/100;
+  const exerPct = r.score/(r.total*lvl.pointsPer);
+  const standPct = Math.min(1, (r.correct/r.total)*1.2);
+  setTimeout(()=>{
+    $('#ring-move').setAttribute('stroke-dashoffset', circ85*(1-movePct));
+    $('#ring-exer').setAttribute('stroke-dashoffset', circ66*(1-exerPct));
+    $('#ring-stand').setAttribute('stroke-dashoffset', circ47*(1-standPct));
+  },200);
+
+  // animated percentage
+  let p=0;
+  const target = r.acc;
+  const pctEl = $('#score-pct');
+  const animate = ()=>{
+    p += Math.max(1, Math.ceil((target-p)/8));
+    if(p>=target){ p=target; pctEl.textContent=p+'%'; return; }
+    pctEl.textContent=p+'%';
+    requestAnimationFrame(animate);
+  };
+  setTimeout(animate,300);
+
+  $('#score-correct').textContent = r.correct;
+  $('#score-points').textContent = r.score;
+  $('#score-missed').textContent = r.missed;
+
+  // breakdown
+  const bl = $('#breakdown-list'); bl.innerHTML='';
+  const colorMap = {
+    'Legitimate':'var(--green)',
+    'Phishing & Spoofing':'var(--red)',
+    'Spam & Junk':'var(--orange)',
+    'Malicious Content':'var(--pink)',
+    'Abuse & Harassment':'var(--purple)',
+    'High-Risk Fraud':'var(--indigo)'
+  };
+  Object.entries(r.breakdown).forEach(([cat,data])=>{
+    if(data.total===0) return;
+    const pct = Math.round(data.correct/data.total*100);
+    const row = document.createElement('div');
+    row.className='breakdown-row';
+    row.innerHTML = `
+      <div class="rt">
+        <span class="rn">${cat}</span>
+        <span class="rnums"><b>${data.correct}</b>/${data.total} · ${pct}%</span>
+      </div>
+      <div class="pbar"><div class="pfill" style="width:0;--color:${colorMap[cat]}"></div></div>
+    `;
+    bl.appendChild(row);
+    setTimeout(()=>{row.querySelector('.pfill').style.width=pct+'%';},500);
+  });
+
+  const btn = $('#btn-next-level');
+  if(i<2){
+    $('#next-level-label').textContent = `Continue to Tier ${['II','III'][i]}`;
+    btn.onclick = ()=>startLevel(i+1);
+  } else {
+    $('#next-level-label').textContent = 'View final report';
+    btn.onclick = ()=>{ renderFinal(); show('view-final'); };
+  }
+}
+$('#btn-to-console').addEventListener('click',()=>{ renderConsole(); show('view-console'); });
+
+/* ---------- FINAL ---------- */
+function renderFinal(){
+  const totalScore = state.levelResults.reduce((a,r)=>a+r.score,0);
+  const totalCorrect = state.levelResults.reduce((a,r)=>a+r.correct,0);
+  const totalQs = state.levelResults.reduce((a,r)=>a+r.total,0);
+  const totalTime = state.levelResults.reduce((a,r)=>a+r.time,0);
+  const acc = Math.round(totalCorrect/totalQs*100);
+  const avg = Math.round(totalTime/totalQs);
+  $('#f-score').textContent = totalScore;
+  $('#f-acc').textContent = acc+'%';
+  $('#f-correct').textContent = totalCorrect;
+  $('#f-avg').textContent = avg+'s';
+
+  const entries = [
+    {name:'Sasha Ivanov', badge:'Actor Profiler', acc:97, score:291},
+    {name:'Maya Rodriguez', badge:'Actor Profiler', acc:93, score:280},
+    {name:'Kenji Watanabe', badge:'Cluster Hunter', acc:90, score:271},
+    {name:'Fatima Khan', badge:'Cluster Hunter', acc:87, score:262},
+    {name:'Tomás Oliveira', badge:'Signal Reader', acc:83, score:250},
+    {name:'Nadia Al-Mansour', badge:'Signal Reader', acc:80, score:240},
+    {name:'Emre Yilmaz', badge:'Signal Reader', acc:77, score:230}
+  ];
+  const me = {name:state.user.name, badge:'Actor Profiler', acc, score:totalScore, isMe:true};
+  entries.push(me);
+  entries.sort((a,b)=> b.score-a.score || b.acc-a.acc);
+  const rank = entries.findIndex(e=>e.isMe)+1;
+  $('#f-rank').textContent = '#'+rank;
+  $('#lb-count').textContent = `${entries.length} analysts · session local`;
+
+  const body = $('#lb-body'); body.innerHTML='';
+  entries.forEach((e,i)=>{
+    const tr = document.createElement('tr');
+    if(e.isMe) tr.className='you';
+    const medal = e.isMe ? 'you' : (i===0?'gold':(i===1?'silver':(i===2?'bronze':'plain')));
+    tr.innerHTML = `
+      <td>
+        <div class="lb-rank">
+          <div class="medal ${medal}">${i+1}</div>
+        </div>
+      </td>
+      <td>
+        <div class="lb-user">
+          <div class="ava">${initials(e.name)}</div>
+          <span>${e.name}</span>
+          ${e.isMe?'<span class="you-tag">YOU</span>':''}
+        </div>
+      </td>
+      <td><span class="badge-col">${e.badge}</span></td>
+      <td class="right">${e.acc}%</td>
+      <td class="right"><b>${e.score}</b></td>
+    `;
+    body.appendChild(tr);
+  });
+
+  const taglines = acc>=90
+    ? 'Elite-tier performance. You could ship this to threat intel tomorrow.'
+    : acc>=75
+    ? 'Solid shift. Your call on the nuanced cases landed well.'
+    : acc>=60
+    ? 'Functional triage. Review the missed campaigns to sharpen your edge.'
+    : 'Campaigns got past you. Retry the tiers you struggled with.';
+  $('#final-tagline').textContent = taglines;
+}
+
+$('#btn-restart').addEventListener('click',()=>{
+  if(!confirm('Restart all three tiers from scratch?')) return;
+  state.currentLevel=0;
+  state.unlocked=[true,false,false];
+  state.completed=[false,false,false];
+  state.levelResults=[null,null,null];
+  renderConsole();
+  show('view-console');
+});
+$('#btn-logout').addEventListener('click',()=>{
+  if(!confirm('End shift and log out?')) return;
+  state.user=null;
+  $('#inp-name').value=''; $('#inp-email').value='';
+  $('#f-name').classList.remove('filled','error');
+  $('#f-email').classList.remove('filled','error');
+  show('view-login');
+});
+</script>
+</body>
+</html>
